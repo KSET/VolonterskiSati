@@ -12,6 +12,6 @@ if __name__ == '__main__':
     db.cursor.execute("SELECT * from CLAN")
     print(db.cursor.fetchall())
     new_values = ('Mladen','Petir','123','091-test','1994-02-26','2016-10-18','420','promjenio.sam@kset.org','foto')
-    db._edit_user_entry(1,new_values)
+    db._edit_user(1,new_values)
     db.cursor.execute("SELECT * from CLAN")
     print(db.cursor.fetchall())
