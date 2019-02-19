@@ -3,13 +3,22 @@ import os
 import DatabaseCommands
 import datetime
 
+
+#Date format: YYYY-MM-DD
+def get_date_object(date):
+    try:
+        return datetime.datetime.strptime(date, '%Y-%m-%d').date()
+    except Exception as e:
+        raise Exception("The format of input date is wrong. %s" % e)
+
+
 class DatabaseController():
 
     def __init__(self):
         self.conn = sqlite3.connect("ksetBazaClanova.db")
         self.cursor = self.conn.cursor()
 
-    def _init_tables(self):
+    def init_tables(self):
         self.cursor.execute(DatabaseCommands.CREATE_USER_TABLE)
         self.cursor.execute(DatabaseCommands.CREATE_ACTIVITY_TABLE)
         self.cursor.execute(DatabaseCommands.CREATE_ACTIVITY_USER_RELATIONSHIP_TABLE)
@@ -22,48 +31,82 @@ class DatabaseController():
     """
     entry_values = tuple containing argument values corresponding to those defined before keyword values.
     """
-    def _add_user_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO CLAN(ime, prezime, oib, mobitel, datum_rodenja, datum_uclanjenja, broj_iskaznice, email, sekcija) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);" , entry_values)
+    def add_member_entry(self, entry_values):
+        self.cursor.execute("INSERT INTO CLAN(ime, prezime, nadimak, oib, mobitel, datum_rodenja, datum_uclanjenja, broj_iskaznice, email, sekcija) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);" , entry_values)
         self._save_changes()
 
-    def _edit_user(self, user_id, new_values):
-        self.cursor.execute("UPDATE CLAN SET ime = ?, prezime = ?, oib = ?, mobitel = ?, datum_rodenja = ?, datum_uclanjenja = ?, broj_iskaznice = ?, email = ?, sekcija = ? WHERE id = ?", new_values + (user_id, ))
+    def edit_member(self, member_id, new_values):
+        self.cursor.execute("UPDATE CLAN SET ime = ?, prezime = ?, nadimak = ?, oib = ?, mobitel = ?, datum_rodenja = ?, datum_uclanjenja = ?, broj_iskaznice = ?, email = ?, sekcija = ? WHERE id = ?", new_values + (member_id, ))
         self._save_changes()
 
-    def _deactivate_user(self, user_id):
-        self.cursor.execute("UPDATE CLAN SET aktivan = 0 WHERE id = ?", (user_id, ))
+    def deactivate_member(self, member_id):
+        self.cursor.execute("UPDATE CLAN SET aktivan = 0 WHERE id = ?", (member_id, ))
         self._save_changes()
 
-    def _activate_user(self, user_id):
-        self.cursor.execute("UPDATE CLAN SET aktivan = 1 WHERE id = ?", (user_id, ))
+    def activate_member(self, member_id):
+        self.cursor.execute("UPDATE CLAN SET aktivan = 1 WHERE id = ?", (member_id, ))
         self._save_changes()
 
-    def _add_activity_entry(self, entry_values):
+    def add_activity_entry(self, entry_values):
         self.cursor.execute("INSERT INTO AKTIVNOST(naziv, opis, datum, id_vrsta_aktivnosti) VALUES (?, ?, ?, ?)", entry_values)
         self._save_changes()
 
-    def _edit_activity(self, activity_id, new_values):
+    def edit_activity(self, activity_id, new_values):
         self.cursor.execute("UPDATE AKTIVNOST SET naziv = ?, opis = ?, datum= ? id_vrsta_aktivnosti = ? WHERE id = ?", new_values + (activity_id, ))
         self._save_changes()
 
-    def _add_activity_type_entry(self, entry_values):
+    def add_activity_type_entry(self, entry_values):
         self.cursor.execute("INSERT INTO TIP_AKTIVNOSTI(naziv, opis) VALUES (?, ?)", entry_values)
         self._save_changes()
 
-    def _edit_activity_type(self, activity_type_id, new_values):
+    def edit_activity_type(self, activity_type_id, new_values):
         self.cursor.execute("UPDATE TIP_AKTIVNOSTI SET naziv = ?, opis = ? WHERE id = ?", new_values + (activity_type_id, ))
+        self._save_changes()
+
+    def add_member_activity_entry(self, entry_values):
+        self.cursor.execute("INSERT INTO CLAN_AKTIVNOST(id_clan, id_aktivnost, broj_sati, faktor) VALUES (?, ?, ?, ?)", entry_values)
+        self._save_changes()
+
+    def remove_entry(self, table_name, id):
+        query = "DELETE FROM %s WHERE id = %d" % (table_name, id)
+        self.cursor.execute(query)
         self._save_changes()
 
     """
     Generic method to fetch row with id from table table_name
     """
-    def _get_table_row(self, table_name, id):
-        self.cursor.execute("SELECT * FROM ? WHERE id = ?", (table_name, id))
+    def get_table_row(self, table_name, id):
+        query = "SELECT * FROM %s WHERE id = %d" % (table_name, id)
+        self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def _get_monthly_activity(self, month = None):
+    def get_member_id(self, name, last_name, nickname = None):
+        query = "SELECT * FROM CLAN WHERE ime = \"%s\" AND prezime = \"%s\"" % (name, last_name)
+        if nickname is not None:
+            query = "%s AND nadimak = \"%s\"" % (query, nickname)
+        self.cursor.execute(query)
+        return self.cursor.fetchone()[0]
+
+    """
+    Method that gets an id from table table_name which attribute field is equal to value
+    """
+    def get_row_id(self, table_name, field, value, return_all = False):
+        query = "SELECT * FROM %s WHERE %s = \"%s\"" % (table_name, field, value)
+        self.cursor.execute(query)
+        if not return_all:
+            return self.cursor.fetchone()[0] #Fetch first one and return an id
+        else:
+            return self.cursor.fetchall()
+
+    def get_all_monthly_activities(self, month = None):
         if month is None:
             month = datetime.datetime.now().month
 
-        ##TODO: Command which gets all hours in month defined by variable month.
+        query = 'SELECT * FROM aktivnost WHERE strftime("%m", datum) = \"{0}\"'.format(month)
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
+    def get_all_rows_from_table(self, table_name):
+        query = "SELECT * FROM %s" % table_name
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
