@@ -106,6 +106,20 @@ class DatabaseController():
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
+    def get_period_activity(self, start_date=None, end_date=None):
+        if end_date is None:
+            end_date = datetime.datetime.now()
+
+        if start_date is None:
+            start_date = end_date.replace(day=1)
+
+        self.cursor.execute("select ime, broj_sati, faktor, datum "
+                            "from CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan "
+                            "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id "
+                            "where datum >= ? and datum <= ?", (start_date, end_date))
+
+        return self.cursor.fetchall()
+
     def get_all_rows_from_table(self, table_name):
         query = "SELECT * FROM %s" % table_name
         self.cursor.execute(query)
