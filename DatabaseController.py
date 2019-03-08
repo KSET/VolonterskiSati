@@ -67,6 +67,10 @@ class DatabaseController():
         self.cursor.execute("INSERT INTO CLAN_AKTIVNOST(id_clan, id_aktivnost, broj_sati, faktor) VALUES (?, ?, ?, ?)", entry_values)
         self._save_changes()
 
+    def edit_member_activity_entry(self, entry_values):
+        self.cursor.execute("UPDATE CLAN_AKTIVNOST SET broj_sati = ?, faktor = ?", entry_values)
+        self._save_changes()
+
     def remove_entry(self, table_name, id):
         query = "DELETE FROM %s WHERE id = %d" % (table_name, id)
         self.cursor.execute(query)
@@ -113,7 +117,7 @@ class DatabaseController():
         if start_date is None:
             start_date = end_date.replace(day=1)
 
-        self.cursor.execute("select ime, broj_sati, faktor, datum "
+        self.cursor.execute("select ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv "
                             "from CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan "
                             "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id "
                             "where datum >= ? and datum <= ?", (start_date, end_date))
