@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <h3>Hello World!</h3>
+    <hr/>
+
+
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Created Date</th>
+        </tr>
+        </thead>
+        {% for record in list_records.items() %}
+            <tr>
+                <td>{{ record }}</td>
+
+            </tr>
+        {% endfor %}
+    </table>
+
+
+{% endblock content %}
