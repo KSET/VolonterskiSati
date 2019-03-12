@@ -128,3 +128,11 @@ class DatabaseController():
         query = "SELECT * FROM %s" % table_name
         self.cursor.execute(query)
         return self.cursor.fetchall()
+
+    def export_data(self, data, destination_file):
+        # TODO: Implement function
+        raise NotImplemented
+
+    def import_date(self, data):
+        # TODO: Implement function
+        raise NotImplemented
