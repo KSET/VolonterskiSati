@@ -14,73 +14,30 @@
   <h2>Forma za dodavanje člana</h2>
   <form class="form-horizontal" method="post">
     <div class="form-group">
-      <label class="control-label col-sm-2" for="name">Name:</label>
+      <label class="control-label col-sm-2" for="name">Naziv aktivnosti:</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" id="name" placeholder="Enter name" name="name" required>
+        <input type="text" class="form-control" id="name" placeholder="Unesi naziv aktivnosti" name="name" required>
       </div>
     </div>
     <div class="form-group">
-      <label class="control-label col-sm-2" for="lastname">Last name:</label>
+      <label class="control-label col-sm-2" for="description">Opis aktivnosti:</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" id="lastname" placeholder="Enter last name" name="lastname" required>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="control-label col-sm-2" for="nickname">Nickname:</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="nickname" placeholder="Enter nickname" name="nickname">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="control-label col-sm-2" for="oib">OIB:</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="oib" placeholder="Enter oib" name="oib" required>
+        <input type="text" class="form-control" id="description" placeholder="Unesi opis aktivnosti" name="description" required>
       </div>
     </div>
       <div class="form-group">
-      <label class="control-label col-sm-2" for="phone">Phone number:</label>
+      <label class="control-label col-sm-2" for="date">Datum aktivnosti:</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" id="phone" placeholder="Enter phone number" name="phone" required>
+        <input type="date" class="form-control" id="date" placeholder="Unesi datum aktivnosti" name="date" required>
       </div>
     </div>
       <div class="form-group">
-      <label class="control-label col-sm-2" for="dateofbirth">Date of birth:</label>
+      <label class="control-label col-sm-2" for="type">Tip aktivnosti:</label>
       <div class="col-sm-10">
-        <input type="date" class="form-control" id="dateofbirth" placeholder="Enter date of birth" name="dateofbirth" required>
-      </div>
-    </div>
-      <div class="form-group">
-      <label class="control-label col-sm-2" for="membership">Membership start date:</label>
-      <div class="col-sm-10">
-        <input type="date" class="form-control" id="membership" placeholder="Enter membership start date" name="membership" required>
-      </div>
-    </div>
-      <div class="form-group">
-      <label class="control-label col-sm-2" for="idcard">Card ID:</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="idcard" placeholder="Enter last name" name="idcard" required>
-      </div>
-    </div>
-      <div class="form-group">
-      <label class="control-label col-sm-2" for="email">Email:</label>
-      <div class="col-sm-10">
-        <input type="email" class="form-control" id="email" placeholder="Enter email" name="email" required>
-      </div>
-    </div>
-      <div class="form-group">
-      <label class="control-label col-sm-2" for="section">Sekcija:</label>
-      <div class="col-sm-10">
-        <select class="form-control" id="section" name="section" required>
-            <option value="" selected disabled hidden>Izaberi sekciju</option>
-            <option value="bike">Bike</option>
-            <option value="disco">Disco</option>
-            <option value="dramska">Dramska</option>
-            <option value="foto">Foto</option>
-            <option value="glazbena">Glazbena</option>
-            <option value="pijandure">Pijandure</option>
-            <option value="comp">Računarska</option>
-            <option value="tech">Tehnička</option>
-            <option value="video">Video</option>
+        <select class="form-control" id="type" name="type" required>
+            {% for k,v in activity_types.items() %}
+                <option value="{{ k }}" >{{ v }}</option>
+            {% endfor %}
       </select>
       </div>
     </div>

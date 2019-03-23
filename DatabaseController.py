@@ -54,7 +54,7 @@ class DatabaseController:
         self._save_changes()
 
     def edit_activity(self, activity_id, new_values):
-        self.cursor.execute("UPDATE AKTIVNOST SET naziv = ?, opis = ?, datum= ? id_vrsta_aktivnosti = ? WHERE id = ?",
+        self.cursor.execute("UPDATE AKTIVNOST SET naziv = ?, opis = ?, datum= ?, id_vrsta_aktivnosti = ? WHERE id = ?",
                             new_values + (activity_id, ))
         self._save_changes()
 
@@ -136,6 +136,18 @@ class DatabaseController:
 
         query = 'SELECT * FROM aktivnost WHERE strftime("%m", datum) = \"{0}\"'.format(month)
         self.cursor.execute(query)
+        return self.cursor.fetchall()
+
+    def get_full_activity_info(self, activity_id=None):
+        query = "select AKTIVNOST.id, AKTIVNOST.naziv, AKTIVNOST.opis, datum, TIP_AKTIVNOSTI.naziv, " \
+                "TIP_AKTIVNOSTI.opis from AKTIVNOST inner join TIP_AKTIVNOSTI " \
+                "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id "
+
+        if activity_id is not None:
+            query = "%s WHERE AKTIVNOST.id = %s" % (query, activity_id)
+
+        self.cursor.execute(query)
+
         return self.cursor.fetchall()
 
     def get_period_activity(self, start_date=None, end_date=None):

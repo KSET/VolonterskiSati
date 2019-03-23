@@ -25,10 +25,12 @@
             <th>Naziv</th>
             <th>Opis</th>
             <th>Datum</th>
+            <th>Tip aktivnosti</th>
+            <th>Opis tipa aktivnosti</th>
         </tr>
         </thead>
         {% for k, v in list_records.items() %}
-            <tr class='clickable-row' data-href="{{ url_for('members.edit_member', member_id = k )}}">
+            <tr class='clickable-row' data-href="{{ url_for('activities.edit_activity', activity_id = k )}}">
                 {% for value in v %}
                     <td>
                         {{ value }}

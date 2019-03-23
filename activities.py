@@ -8,64 +8,85 @@ import DatabaseTables
 activities_bp = Blueprint('activities', __name__, url_prefix='/activities')
 
 @activities_bp.route('/add', methods=('GET', 'POST'))
-def add_member():
+def add_activity():
+    db = DatabaseController()
     if request.method == 'POST':
         name = request.form['name']
-        last_name = request.form['lastname']
-        nickname = request.form['nickname']
-        oib = request.form['oib']
-        phone_number = request.form['phone']
-        date_of_birth = request.form['dateofbirth']
-        membership_start = request.form['membership']
-        card_id = request.form['idcard']
-        email = request.form['email']
-        section = request.form['section']
+        description = request.form['description']
+        activity_start_date = request.form['date']
+        type = request.form['type']
 
-        db = DatabaseController()
         error = None
 
         if not name:
             error = 'Username is required.'
-        elif not last_name:
-            error = 'Password is required.'
-        elif not nickname:
-            nickname = '-'
-        elif not oib:
-            error = 'Oib value is required.'
-        elif not phone_number:
-            error = 'Phone number is required.'
-        elif not date_of_birth:
-            error = 'Date of birth is required.'
-        elif not membership_start:
-            error = 'Membership start date is required.'
-        elif not card_id:
-            error = 'Card id is required.'
-        elif not email:
-            error = 'Email is required.'
-        elif not section or section == 'Izaberi sekciju':
-            error = 'Sekcija value is required.'
-        elif db.account_exists(card_id):
-            error = 'User card id {} is already registered.'.format("%s %s" % (name, last_name))
+        elif not description:
+            description = '-'
+        elif not activity_start_date:
+            error = 'Date is required'
+        elif not type:
+            error = 'Activity type value is required.'
 
         if error is None:
-            date_of_birth = get_date_object(date_of_birth)
-            membership_start = get_date_object(membership_start)
-            entry_values = (name, last_name, nickname, oib, phone_number, date_of_birth, membership_start,
-                            card_id, email, section)
-            db.add_member_entry(entry_values)
-            flash("Član %s %s je uspješno dodan!" % (name, last_name), 'success')
+            activity_start_date = get_date_object(activity_start_date)
+            entry_values = (name, description, activity_start_date, type)
+            db.add_activity_entry(entry_values)
+            flash("Aktivnost %s je uspješno dodana!" % name, 'success')
             return redirect(url_for('index'))
 
         flash(error, 'error')
 
-    return render_template('/members/add.html')
+    activity_types = {}
+    for row in db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI):
+        activity_types[row[0]] = row[1]
+
+    return render_template('/activities/add.html', activity_types=activity_types)
 
 @activities_bp.route('/list', methods=['GET'])
-def list_members():
+def list_activities():
     db = DatabaseController()
-    activities = db.get_all_rows_from_table(DatabaseTables.AKTIVNOST)
+    activities = db.get_full_activity_info()
     activities_list = {}
     for activity in activities:
-        activities_list[activity[0]] = activity[1:-1]
+        activities_list[activity[0]] = activity[1:]
 
     return render_template("/activities/list.html", list_records=activities_list)
+
+
+@activities_bp.route('/edit/<activity_id>', methods=['GET', 'POST'])
+def edit_activity(activity_id):
+    db = DatabaseController()
+    activity = db.get_full_activity_info(activity_id)[0]  # First index to remove the list type
+    if request.method == 'POST':
+        name = request.form['name']
+        description = request.form['description']
+        activity_start_date = request.form['date']
+        activity_type = request.form['type']
+
+        error = None
+
+        if not name:
+            error = 'Username is required.'
+        elif not description:
+            description = '-'
+        elif not activity_start_date:
+            error = 'Date is required'
+        elif not activity_type:
+            error = 'Activity type value is required.'
+
+        if error is None:
+            activity_start_date = get_date_object(activity_start_date)
+            entry_values = (name, description, activity_start_date, int(activity_type))
+            print(activity_id)
+            print(entry_values)
+            db.edit_activity(activity_id, entry_values)
+            flash("Aktivnost %s je uspješno izmjenjena!" % name, 'success')
+            return redirect(url_for('index'))
+
+        flash(error, 'error')
+
+    activity_types = {}
+    for row in db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI):
+        activity_types[row[0]] = row[1]
+
+    return render_template('/activities/edit.html', activity_types=activity_types, activity=activity[1:])

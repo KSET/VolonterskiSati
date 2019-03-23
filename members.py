@@ -126,15 +126,12 @@ def edit_member(member_id):
             membership_start = get_date_object(membership_start)
             entry_values = (name, last_name, nickname, oib, phone_number, date_of_birth, membership_start,
                             card_id, email, section)
+            print(entry_values)
             db.edit_member(member_id, entry_values)
             flash("Podaci člana %s %s je uspješno izmjenjen!" % (name, last_name), 'success')
             return redirect(url_for('index'))
 
         flash(error, 'error')
 
-        return render_template('/members/edit.html', member=member[1:])
-
-    elif request.method == 'GET':
-
-        return render_template("members/edit.html", member=member[1:])
+    return render_template('/members/edit.html', member=member[1:])
 
