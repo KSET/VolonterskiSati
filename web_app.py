@@ -7,6 +7,7 @@ from werkzeug.security import check_password_hash
 import datetime
 from auth import auth_bp
 from members import members_bp
+from activities import activities_bp
 
 app = Flask(__name__)
 app.config.from_mapping(
@@ -15,6 +16,7 @@ app.config.from_mapping(
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(members_bp)
+app.register_blueprint(activities_bp)
 
 DatabaseController().init_tables()
 

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Izmjeni podatke o članu</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h2>Forma za dodavanje člana</h2>
+  <form class="form-horizontal" method="post">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="name">Name:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="name" value="{{ member[0] }}" name="name" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="lastname">Last name:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="lastname" value="{{ member[1] }}" name="lastname" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="nickname">Nickname:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="nickname" value="{{ member[2] }}" name="nickname">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="oib">OIB:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="oib" value="{{ member[3] }}" name="oib" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="phone">Phone number:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="phone" value="{{ member[4] }}" name="phone" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="dateofbirth">Date of birth:</label>
+      <div class="col-sm-10">
+        <input type="date" class="form-control" id="dateofbirth" value="{{ member[5] }}" name="dateofbirth" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="membership">Membership start date:</label>
+      <div class="col-sm-10">
+        <input type="date" class="form-control" id="membership" value="{{ member[6] }}" name="membership" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="idcard">Card ID:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="idcard" value="{{ member[7] }}" name="idcard" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="email">Email:</label>
+      <div class="col-sm-10">
+        <input type="email" class="form-control" id="email" value="{{ member[8] }}" name="email" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="section">Sekcija:</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="section" name="section" required>
+            <option value="{{ member[9] }}" selected disabled hidden>{{ member[9] }}</option>
+            <option value="bike">Bike</option>
+            <option value="disco">Disco</option>
+            <option value="dramska">Dramska</option>
+            <option value="foto">Foto</option>
+            <option value="glazbena">Glazbena</option>
+            <option value="pijandure">Pijandure</option>
+            <option value="comp">Računarska</option>
+            <option value="tech">Tehnička</option>
+            <option value="video">Video</option>
+      </select>
+      </div>
+    </div>
+      <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-warning">Submit</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+</body>
+</html>
