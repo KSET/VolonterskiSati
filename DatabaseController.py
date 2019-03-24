@@ -88,7 +88,7 @@ class DatabaseController:
         self._save_changes()
 
     def remove_entry(self, table_name, id):
-        query = "DELETE FROM %s WHERE id = %d" % (table_name, id)
+        query = "DELETE FROM %s WHERE id = %s" % (table_name, id)
         self.cursor.execute(query)
         self._save_changes()
 
@@ -105,6 +105,11 @@ class DatabaseController:
 
     def activity_type_exists(self, name):
         self.cursor.execute('SELECT id FROM TIP_AKTIVNOSTI WHERE naziv = ?', (name, ))
+        return self.cursor.fetchone() is not None
+
+    def entry_exists(self, table_name, activity_id):
+        query = 'SELECT id FROM %s WHERE id = %s' % (table_name, activity_id)
+        self.cursor.execute(query)
         return self.cursor.fetchone() is not None
 
 

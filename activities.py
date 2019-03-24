@@ -7,10 +7,12 @@ import DatabaseTables
 
 activities_bp = Blueprint('activities', __name__, url_prefix='/activities')
 
+
 @activities_bp.route('/add', methods=('GET', 'POST'))
 def add_activity():
     db = DatabaseController()
     if request.method == 'POST':
+        # TODO: AKO JE USER STISNUO ZA ČLANOVE KOJI SU DOSLI PREUSMJERI NA FORMU GDJE SE UPISUJU ODRADENI SATI
         name = request.form['name']
         description = request.form['description']
         activity_start_date = request.form['date']
@@ -41,6 +43,7 @@ def add_activity():
         activity_types[row[0]] = row[1]
 
     return render_template('/activities/add.html', activity_types=activity_types)
+
 
 @activities_bp.route('/list', methods=['GET'])
 def list_activities():
@@ -89,7 +92,24 @@ def edit_activity(activity_id):
     for row in db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI):
         activity_types[row[0]] = row[1]
 
-    return render_template('/activities/edit.html', activity_types=activity_types, activity=activity[1:])
+    return render_template('/activities/edit.html', activity_types=activity_types, activity=activity[1:],
+                           activity_id=activity[0])
+
+
+@activities_bp.route('/remove/<activity_id>', methods=['POST'])
+def remove_activity(activity_id):
+
+    if request.method == 'POST':
+
+        db = DatabaseController()
+        if not db.entry_exists(DatabaseTables.AKTIVNOST, activity_id):
+            error = 'Neuspješno brisanje. Zapis ne postoji u bazi.'
+            flash(error, 'danger')
+        else:
+            db.remove_entry(DatabaseTables.AKTIVNOST, activity_id)
+            flash('Aktivnost uspješno izbrisana', 'success')
+
+    return "1"
 
 
 @activities_bp.route('/add_type', methods=['GET', 'POST'])
@@ -154,4 +174,21 @@ def edit_activity_type(type_id):
 
         flash(error, 'danger')
 
-    return render_template('/activities/edit_type.html', activity_type=activity_type[1:])
+    return render_template('/activities/edit_type.html', activity_type=activity_type[1:],
+                           activity_type_id=activity_type[0])
+
+
+@activities_bp.route('/remove_type/<activity_type_id>', methods=['POST'])
+def remove_activity_type(activity_type_id):
+
+    if request.method == 'POST':
+
+        db = DatabaseController()
+        if not db.entry_exists(DatabaseTables.TIP_AKTIVNOSTI, activity_type_id):
+            error = 'Neuspješno brisanje. Zapis ne postoji u bazi.'
+            flash(error, 'danger')
+        else:
+            db.remove_entry(DatabaseTables.TIP_AKTIVNOSTI, activity_type_id)
+            flash('Tip aktivnosti uspješno izbrisana', 'success')
+
+    return "1"

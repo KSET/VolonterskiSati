@@ -132,5 +132,21 @@ def edit_member(member_id):
 
         flash(error, 'danger')
 
-    return render_template('/members/edit.html', member=member[1:])
+    return render_template('/members/edit.html', member=member[1:], member_id=member[0])
+
+
+@members_bp.route('/remove/<member_id>', methods=['POST'])
+def remove_member(member_id):
+
+    if request.method == 'POST':
+
+        db = DatabaseController()
+        if not db.entry_exists(DatabaseTables.CLAN, member_id):
+            error = 'Neuspješno brisanje. Zapis ne postoji u bazi.'
+            flash(error, 'danger')
+        else:
+            db.remove_entry(DatabaseTables.CLAN, member_id)
+            flash('Član uspješno izbrisan', 'success')
+
+    return "1"
 
