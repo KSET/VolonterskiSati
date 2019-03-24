@@ -60,7 +60,7 @@ def add_member():
             flash("Član %s %s je uspješno dodan!" % (name, last_name), 'success')
             return redirect(url_for('index'))
 
-        flash(error, 'error')
+        flash(error, 'danger')
 
     return render_template('/members/add.html')
 
@@ -126,12 +126,11 @@ def edit_member(member_id):
             membership_start = get_date_object(membership_start)
             entry_values = (name, last_name, nickname, oib, phone_number, date_of_birth, membership_start,
                             card_id, email, section)
-            print(entry_values)
             db.edit_member(member_id, entry_values)
             flash("Podaci člana %s %s je uspješno izmjenjen!" % (name, last_name), 'success')
             return redirect(url_for('index'))
 
-        flash(error, 'error')
+        flash(error, 'danger')
 
     return render_template('/members/edit.html', member=member[1:])
 

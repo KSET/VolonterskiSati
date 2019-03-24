@@ -103,6 +103,10 @@ class DatabaseController:
         self.cursor.execute('SELECT id FROM CLAN WHERE broj_iskaznice = ?', (card_id, ))
         return self.cursor.fetchone() is not None
 
+    def activity_type_exists(self, name):
+        self.cursor.execute('SELECT id FROM TIP_AKTIVNOSTI WHERE naziv = ?', (name, ))
+        return self.cursor.fetchone() is not None
+
 
     """
     Generic method to fetch row with id from table table_name
