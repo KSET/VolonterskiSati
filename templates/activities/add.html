@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <title>Dodaj aktivnost</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h2>Forma za dodavanje aktivnosti</h2>
+  <form class="form-horizontal" method="post">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="name">Naziv aktivnosti:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="name" placeholder="Unesi naziv aktivnosti" name="name" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="description">Opis aktivnosti:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="description" placeholder="Unesi opis aktivnosti" name="description" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="date">Datum aktivnosti:</label>
+      <div class="col-sm-10">
+        <input type="date" class="form-control" id="date" placeholder="Unesi datum aktivnosti" name="date" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="type">Tip aktivnosti:</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="type" name="type" required>
+            {% for k,v in activity_types.items() %}
+                <option value="{{ k }}" >{{ v }}</option>
+            {% endfor %}
+      </select>
+      </div>
+    </div>
+      <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-success" name="action" value="add_only">Dodaj aktivnost</button>
+        <button type="submit" class="btn btn-warning" name="action" value="member_to_activity">Dodaj članove koji su došli</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+</body>
+{% endblock content %}

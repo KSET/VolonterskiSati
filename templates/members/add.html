@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <title>Dodaj člana</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h2>Forma za dodavanje člana</h2>
+  <form class="form-horizontal" method="post">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="name">Ime:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="name" placeholder="Upiši ime" name="name" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="lastname">Prezime:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="lastname" placeholder="Upiši prezime" name="lastname" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="nickname">Nadimak:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="nickname" placeholder="Upiši nadimak" name="nickname">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="oib">OIB:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="oib" placeholder="Upiši oib" name="oib" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="phone">Broj mobitela:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="phone" placeholder="Upiši broj mobitela" name="phone" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="dateofbirth">Datum rođenja:</label>
+      <div class="col-sm-10">
+        <input type="date" class="form-control" id="dateofbirth" placeholder="Upiši datum rođenja" name="dateofbirth" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="membership">Datum učlanjenja:</label>
+      <div class="col-sm-10">
+        <input type="date" class="form-control" id="membership" placeholder="Upiši datum učlanjenja" name="membership" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="idcard">Broj članske iskaznice:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="idcard" placeholder="Upiši broj članske iskaznice" name="idcard" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="email">Email:</label>
+      <div class="col-sm-10">
+        <input type="email" class="form-control" id="email" placeholder="Upiši email" name="email" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="section">Sekcija:</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="section" name="section" required>
+            <option value="" selected disabled hidden>Izaberi sekciju</option>
+            <option value="bike">Bike</option>
+            <option value="disco">Disco</option>
+            <option value="dramska">Dramska</option>
+            <option value="foto">Foto</option>
+            <option value="glazbena">Glazbena</option>
+            <option value="pijandure">Pijandure</option>
+            <option value="comp">Računarska</option>
+            <option value="tech">Tehnička</option>
+            <option value="video">Video</option>
+      </select>
+      </div>
+    </div>
+      <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-success">Dodaj člana</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+</body>
+{% endblock content %}

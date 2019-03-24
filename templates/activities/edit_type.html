@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <title>Izmjeni tip aktivnosti</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+<script>
+function clicked(e)
+{
+    if(!confirm('Oprez! Pritiskom na OK podaci se neće moći vratiti! Želite li nastaviti?'))e.preventDefault();
+    else {
+        $.ajax({
+            url: '/activities/remove_type/'+{{activity_type_id}},
+            type: 'POST',
+            success: function(data)
+            {
+                window.location.href="/activities/list_types"
+            }
+        })};
+}
+</script>
+<div class="container">
+  <h2>Forma za izmjenu tipa aktivnosti</h2>
+  <form class="form-horizontal" method="post">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="name">Naziv tipa aktivnosti:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="name" value="{{ activity_type[0] }}" name="name" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="description">Opis tipa aktivnosti:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="description" value="{{ activity_type[1] }}" name="description" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-warning">Submit</button>
+        <button type="button" class="btn btn-danger" onclick="clicked(event)">Izbriši tip aktivnosti</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+</body>
+{% endblock content %}

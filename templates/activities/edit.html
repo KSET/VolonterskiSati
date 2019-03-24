@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <title>Izmjeni aktivnost</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<script>
+function clicked(e)
+{
+    if(!confirm('Oprez! Pritiskom na OK podaci se neće moći vratiti! Želite li nastaviti?'))e.preventDefault();
+    else {
+        $.ajax({
+            url: '/activities/remove/'+{{activity_id}},
+            type: 'POST',
+            success: function(data)
+            {
+                window.location.href="/activities/list"
+            }
+        })};
+}
+</script>
+
+<div class="container">
+  <h2>Forma za izmjenu aktivnosti</h2>
+  <form class="form-horizontal" method="post">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="name">Naziv aktivnosti:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="name" value="{{ activity[0] }}" name="name" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="description">Opis aktivnosti:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="description" value="{{ activity[1] }}" name="description" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="date">Datum aktiosti:</label>
+      <div class="col-sm-10">
+        <input type="date" class="form-control" id="date" value="{{ activity[2] }}" name="date" required>
+      </div>
+    </div>
+      <div class="form-group">
+      <label class="control-label col-sm-2" for="type">Tip aktivnosti:</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="type" name="type" required>
+            {% for k,v in activity_types.items() %}
+                {% if v == activity[3] %}
+                    <option value="{{ k }}" selected>{{ activity[3] }}</option>
+                {% else %}
+                <option value="{{ k }}" >{{ v }}</option>
+                {% endif %}
+            {% endfor %}
+
+      </select>
+      </div>
+    </div>
+      <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-warning">Submit</button>
+        <button type="button" class="btn btn-danger" onclick="clicked(event)">Izbriši aktivnost</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+</body>
+{% endblock content %}

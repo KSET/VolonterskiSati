@@ -12,13 +12,14 @@ def get_date_object(date):
         raise Exception("The format of input date is wrong. %s" % e)
 
 
-class DatabaseController():
+class DatabaseController:
 
     def __init__(self):
         self.conn = sqlite3.connect("ksetBazaClanova.db")
         self.cursor = self.conn.cursor()
 
     def init_tables(self):
+        self.cursor.execute(DatabaseCommands.CREATE_ACCOUNTS_TABLE)
         self.cursor.execute(DatabaseCommands.CREATE_USER_TABLE)
         self.cursor.execute(DatabaseCommands.CREATE_ACTIVITY_TABLE)
         self.cursor.execute(DatabaseCommands.CREATE_ACTIVITY_USER_RELATIONSHIP_TABLE)
@@ -48,33 +49,69 @@ class DatabaseController():
         self._save_changes()
 
     def add_activity_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO AKTIVNOST(naziv, opis, datum, id_vrsta_aktivnosti) VALUES (?, ?, ?, ?)", entry_values)
+        self.cursor.execute("INSERT INTO AKTIVNOST(naziv, opis, datum, id_vrsta_aktivnosti) VALUES (?, ?, ?, ?)",
+                            entry_values)
         self._save_changes()
 
     def edit_activity(self, activity_id, new_values):
-        self.cursor.execute("UPDATE AKTIVNOST SET naziv = ?, opis = ?, datum= ? id_vrsta_aktivnosti = ? WHERE id = ?", new_values + (activity_id, ))
+        self.cursor.execute("UPDATE AKTIVNOST SET naziv = ?, opis = ?, datum= ?, id_vrsta_aktivnosti = ? WHERE id = ?",
+                            new_values + (activity_id, ))
         self._save_changes()
 
     def add_activity_type_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO TIP_AKTIVNOSTI(naziv, opis) VALUES (?, ?)", entry_values)
+        self.cursor.execute("INSERT INTO TIP_AKTIVNOSTI(naziv, opis) VALUES (?, ?)",
+                            entry_values)
         self._save_changes()
 
     def edit_activity_type(self, activity_type_id, new_values):
-        self.cursor.execute("UPDATE TIP_AKTIVNOSTI SET naziv = ?, opis = ? WHERE id = ?", new_values + (activity_type_id, ))
+        self.cursor.execute("UPDATE TIP_AKTIVNOSTI SET naziv = ?, opis = ? WHERE id = ?",
+                            new_values + (activity_type_id, ))
         self._save_changes()
 
     def add_member_activity_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO CLAN_AKTIVNOST(id_clan, id_aktivnost, broj_sati, faktor) VALUES (?, ?, ?, ?)", entry_values)
+        self.cursor.execute("INSERT INTO CLAN_AKTIVNOST(id_clan, id_aktivnost, broj_sati, faktor) VALUES (?, ?, ?, ?)",
+                            entry_values)
         self._save_changes()
 
     def edit_member_activity_entry(self, entry_values):
         self.cursor.execute("UPDATE CLAN_AKTIVNOST SET broj_sati = ?, faktor = ?", entry_values)
         self._save_changes()
 
+    def add_user_account(self, entry_values):
+        self.cursor.execute("INSERT INTO ACCOUNTS (username, password, access_level, sekcija) VALUES (?, ?, ?, ?)",
+                            entry_values)
+        self._save_changes()
+
+    def edit_user_account(self, user_id, new_values):
+        self.cursor.execute("UPDATE ACCOUNTS SET access_level = ?, sekcija = ? WHERE id = ?",
+                            new_values + (user_id,))
+        self._save_changes()
+
     def remove_entry(self, table_name, id):
-        query = "DELETE FROM %s WHERE id = %d" % (table_name, id)
+        query = "DELETE FROM %s WHERE id = %s" % (table_name, id)
         self.cursor.execute(query)
         self._save_changes()
+
+    """
+    Methods that test existence of database entries.
+    """
+    def account_exists(self, username):
+        self.cursor.execute('SELECT id FROM ACCOUNTS WHERE username = ?', (username, ))
+        return self.cursor.fetchone() is not None
+
+    def member_exists(self, card_id):
+        self.cursor.execute('SELECT id FROM CLAN WHERE broj_iskaznice = ?', (card_id, ))
+        return self.cursor.fetchone() is not None
+
+    def activity_type_exists(self, name):
+        self.cursor.execute('SELECT id FROM TIP_AKTIVNOSTI WHERE naziv = ?', (name, ))
+        return self.cursor.fetchone() is not None
+
+    def entry_exists(self, table_name, activity_id):
+        query = 'SELECT id FROM %s WHERE id = %s' % (table_name, activity_id)
+        self.cursor.execute(query)
+        return self.cursor.fetchone() is not None
+
 
     """
     Generic method to fetch row with id from table table_name
@@ -94,11 +131,11 @@ class DatabaseController():
     """
     Method that gets an id from table table_name which attribute field is equal to value
     """
-    def get_row_id(self, table_name, field, value, return_all = False):
+    def get_row(self, table_name, field, value, return_all=False):
         query = "SELECT * FROM %s WHERE %s = \"%s\"" % (table_name, field, value)
         self.cursor.execute(query)
         if not return_all:
-            return self.cursor.fetchone()[0] #Fetch first one and return an id
+            return self.cursor.fetchone() # Fetch first one
         else:
             return self.cursor.fetchall()
 
@@ -108,6 +145,18 @@ class DatabaseController():
 
         query = 'SELECT * FROM aktivnost WHERE strftime("%m", datum) = \"{0}\"'.format(month)
         self.cursor.execute(query)
+        return self.cursor.fetchall()
+
+    def get_full_activity_info(self, activity_id=None):
+        query = "select AKTIVNOST.id, AKTIVNOST.naziv, AKTIVNOST.opis, datum, TIP_AKTIVNOSTI.naziv, " \
+                "TIP_AKTIVNOSTI.opis from AKTIVNOST inner join TIP_AKTIVNOSTI " \
+                "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id "
+
+        if activity_id is not None:
+            query = "%s WHERE AKTIVNOST.id = %s" % (query, activity_id)
+
+        self.cursor.execute(query)
+
         return self.cursor.fetchall()
 
     def get_period_activity(self, start_date=None, end_date=None):
