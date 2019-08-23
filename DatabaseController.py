@@ -4,7 +4,7 @@ import DatabaseCommands
 import datetime
 
 
-#Date format: YYYY-MM-DD
+# Date format: YYYY-MM-DD
 def get_date_object(date):
     try:
         return datetime.datetime.strptime(date, '%Y-%m-%d').date()
@@ -74,7 +74,8 @@ class DatabaseController:
         self._save_changes()
 
     def edit_member_activity_entry(self, entry_values):
-        self.cursor.execute("UPDATE CLAN_AKTIVNOST SET broj_sati = ?, faktor = ?", entry_values)
+        self.cursor.execute("UPDATE CLAN_AKTIVNOST SET broj_sati = ?, faktor = ? "
+                            "WHERE id_clan = ? and id_aktivnost = ?", entry_values)
         self._save_changes()
 
     def add_user_account(self, entry_values):
@@ -90,6 +91,10 @@ class DatabaseController:
     def remove_entry(self, table_name, id):
         query = "DELETE FROM %s WHERE id = %s" % (table_name, id)
         self.cursor.execute(query)
+        self._save_changes()
+
+    def remove_member_activity_entry(self, activity_id, member_id):
+        self.cursor.execute("DELETE FROM CLAN_AKTIVNOST WHERE id_aktivnost = ? AND id_clan = ?", (activity_id, member_id))
         self._save_changes()
 
     """
@@ -112,16 +117,19 @@ class DatabaseController:
         self.cursor.execute(query)
         return self.cursor.fetchone() is not None
 
+    def member_activity_exists(self, member_id, activity_id):
+        return self.cursor.execute('SELECT id_clan, id_aktivnost FROM CLAN_AKTIVNOST WHERE id_clan = ? '
+                                   'AND id_aktivnost = ?', (member_id, activity_id)).fetchone() is not None
 
     """
     Generic method to fetch row with id from table table_name
     """
-    def get_table_row(self, table_name, id):
-        query = "SELECT * FROM %s WHERE id = %d" % (table_name, id)
+    def get_table_row(self, table_name, _id):
+        query = "SELECT * FROM %s WHERE id = %d" % (table_name, _id)
         self.cursor.execute(query)
-        return self.cursor.fetchall()
+        return self.cursor.fetchone()
 
-    def get_member_id(self, name, last_name, nickname = None):
+    def get_member_id(self, name, last_name, nickname=None):
         query = "SELECT * FROM CLAN WHERE ime = \"%s\" AND prezime = \"%s\"" % (name, last_name)
         if nickname is not None:
             query = "%s AND nadimak = \"%s\"" % (query, nickname)
@@ -135,11 +143,11 @@ class DatabaseController:
         query = "SELECT * FROM %s WHERE %s = \"%s\"" % (table_name, field, value)
         self.cursor.execute(query)
         if not return_all:
-            return self.cursor.fetchone() # Fetch first one
+            return self.cursor.fetchone()  # Fetch first one
         else:
             return self.cursor.fetchall()
 
-    def get_all_monthly_activities(self, month = None):
+    def get_all_monthly_activities(self, month=None):
         if month is None:
             month = datetime.datetime.now().month
 
@@ -178,6 +186,12 @@ class DatabaseController:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
+    def get_activity_members(self, activity_id):
+        self.cursor.execute("SELECT id, ime, prezime, CLAN_AKTIVNOST.broj_sati, CLAN_AKTIVNOST.faktor "
+                            "FROM CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan "
+                            "WHERE CLAN_AKTIVNOST.id_aktivnost = ? AND broj_sati > 0", (activity_id,))
+        return self.cursor.fetchall()
+
     def export_data(self, data, destination_file):
         # TODO: Implement function
         raise NotImplemented
@@ -185,3 +199,7 @@ class DatabaseController:
     def import_date(self, data):
         # TODO: Implement function
         raise NotImplemented
+
+    def get_last_row_id(self):
+        return self.cursor.lastrowid
+

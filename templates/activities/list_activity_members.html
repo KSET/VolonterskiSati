@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <style>
+  .modal-header, h4, .close {
+    background-color: #f49b13;
+    color:white !important;
+    text-align: center;
+    font-size: 30px;
+  }
+  .modal-footer {
+    background-color: #f9f9f9;
+  }
+  </style>
+</head>
+<body>
+{% if not members_list %}
+    <h2>Za aktivnost {{ activity_name }} održanu dana {{ activity_date }}. godine nije zapisan niti jedan član</h2>
+{% else %}
+  <h2>Članovi koji su radili na aktivnosti {{ activity_name }} dana {{ activity_date }}. godine</h2>
+{% endif %}
+<table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>Ime</th>
+            <th>Prezime</th>
+            <th>Broj sati</th>
+            <th>Faktor</th>
+        </tr>
+        </thead>
+        {% for k, v in members_list.items() %}
+            <tr>
+                {% for value in v %}
+                    <td>
+                        {{ value }}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+
+<button class="btn btn-primary" onclick="add({{activity_id}})">Dodaj članove koji su došli</button>
+<button type="button" class="btn btn-warning" onclick="edit({{activity_id}})">Izmjeni aktivnost članova</button>
+
+<script>
+    jQuery(document).ready(function($) {
+    $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+    });
+});
+
+function add(activity_id)
+{
+    $.ajax({
+        url: '/activities/'+activity_id+'/add_members',
+        type: 'GET',
+        success: function(response) {
+          if (response) {
+            window.location.href = '/activities/'+activity_id+'/add_members';
+          }
+}
+    });
+}
+
+function edit(activity_id)
+{
+    $.ajax({
+        url: '/activities/'+activity_id+'/edit_member_hours/',
+        type: 'GET',
+        success: function(response) {
+          if (response) {
+            window.location.href = '/activities/'+activity_id+'/edit_member_hours/';
+          }
+        }
+    });
+}
+</script>
+</body>
+{% endblock content %}

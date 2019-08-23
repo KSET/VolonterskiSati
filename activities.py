@@ -12,7 +12,7 @@ activities_bp = Blueprint('activities', __name__, url_prefix='/activities')
 def add_activity():
     db = DatabaseController()
     if request.method == 'POST':
-        # TODO: AKO JE USER STISNUO ZA ČLANOVE KOJI SU DOSLI PREUSMJERI NA FORMU GDJE SE UPISUJU ODRADENI SATI
+        # TODO: AKO JE USER STISNUO ZA ČLANOVE KOJI SU DOSLI PREUSMJERI NA FORMU GDJE SE UPISUJU ODRADENI SATI //GETLIST sa checkbox probaj
         name = request.form['name']
         description = request.form['description']
         activity_start_date = request.form['date']
@@ -33,7 +33,12 @@ def add_activity():
             activity_start_date = get_date_object(activity_start_date)
             entry_values = (name, description, activity_start_date, type)
             db.add_activity_entry(entry_values)
+            activity_id = db.get_last_row_id()
+
             flash("Aktivnost %s je uspješno dodana!" % name, 'success')
+            if request.form['action'] == "member_to_activity":
+                flash("Preusmjeren si na formu za dodavanje članova koji su došli na aktivnost.", 'info')
+                return redirect(url_for('activities.add_members_to_activity', activity_id=activity_id))
             return redirect(url_for('index'))
 
         flash(error, 'danger')
@@ -69,7 +74,7 @@ def edit_activity(activity_id):
         error = None
 
         if not name:
-            error = 'Username is required.'
+            error = 'Activity name is required.'
         elif not description:
             description = '-'
         elif not activity_start_date:
@@ -80,8 +85,6 @@ def edit_activity(activity_id):
         if error is None:
             activity_start_date = get_date_object(activity_start_date)
             entry_values = (name, description, activity_start_date, int(activity_type))
-            print(activity_id)
-            print(entry_values)
             db.edit_activity(activity_id, entry_values)
             flash("Aktivnost %s je uspješno izmjenjena!" % name, 'success')
             return redirect(url_for('index'))
@@ -192,3 +195,76 @@ def remove_activity_type(activity_type_id):
             flash('Tip aktivnosti uspješno izbrisana', 'success')
 
     return "1"
+
+
+@activities_bp.route('/<activity_id>/add_members', methods=['GET', 'POST'])
+def add_members_to_activity(activity_id):
+    db = DatabaseController()
+    all_members = db.get_all_rows_from_table(DatabaseTables.CLAN)
+    members_list = {}
+    for member in all_members:
+        member_id = member[0]
+        if member[11] == 1 and not db.member_activity_exists(member_id, activity_id):
+            members_list[member[0]] = member[1:]
+
+    if request.method == 'POST':
+        for member_id, _ in members_list.items():
+            hours_worked = request.form["hoursworked%s" % member_id]
+            factor = request.form["factor%s" % member_id]
+            if float(hours_worked) != 0:
+                if not db.member_activity_exists(member_id, activity_id):
+                    db.add_member_activity_entry((member_id, activity_id, hours_worked, factor))
+
+        flash("Volonterski sati su uspješno izmjenjeni!", "success")
+        return redirect("/activities/list")
+
+    return render_template("/activities/add_members_to_activity.html", activity_id=activity_id, members_list=members_list)
+
+
+@activities_bp.route('/<activity_id>/list_members', methods=['GET'])
+def list_activity_members(activity_id):
+    db = DatabaseController()
+    activity_members = db.get_activity_members(activity_id)
+    activity_name = db.get_table_row(DatabaseTables.AKTIVNOST, int(activity_id))[1]
+    activity_date = get_croatian_date_format(db.get_table_row(DatabaseTables.AKTIVNOST, int(activity_id))[3])
+    members_list = {}
+    for member in activity_members:
+        members_list[member[0]] = member[1:]
+    return render_template("/activities/list_activity_members.html", members_list=members_list,
+                           activity_name=activity_name, activity_date=activity_date, activity_id=activity_id)
+
+
+@activities_bp.route('/<activity_id>/edit_member_hours/', methods=['GET', 'POST'])
+def edit_activity_member_hours(activity_id):
+    db = DatabaseController()
+    all_members = db.get_activity_members(activity_id)
+    members_list = {}
+    for member in all_members:
+        members_list[member[0]] = member[1:]
+
+    activity_name = db.get_table_row(DatabaseTables.AKTIVNOST, int(activity_id))[1]
+    activity_date = get_croatian_date_format(db.get_table_row(DatabaseTables.AKTIVNOST, int(activity_id))[3])
+
+    if request.method == 'POST':
+        for member_id, member_data in members_list.items():
+            member_name, member_last_name, member_hours, member_factor = member_data
+            hours_worked = request.form["hoursworked%s" % member_id]
+            factor = request.form["factor%s" % member_id]
+            if float(hours_worked) == 0:
+                db.remove_member_activity_entry(activity_id, member_id)
+            elif float(hours_worked) != member_hours or float(factor) != member_factor:
+                entry_values = (float(hours_worked), float(factor), member_id, activity_id)
+                db.edit_member_activity_entry(entry_values)
+            else:
+                pass
+
+        flash("Sati volontiranja uspješno izmjenjeni", 'success')
+        return redirect(url_for('index'))
+
+    return render_template('/activities/edit_member_hours.html', members_list=members_list, activity_name=activity_name,
+                           activity_date=activity_date, activity_id=activity_id)
+
+
+def get_croatian_date_format(date):
+    date_year, date_month, date_day = date.split('-')
+    return "%s.%s %s" % (date_day, date_month, date_year)

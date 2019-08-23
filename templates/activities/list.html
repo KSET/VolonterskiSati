@@ -18,7 +18,46 @@
   </style>
 </head>
 <body>
+<script>
+function edit(activity_id)
+{
+    $.ajax({
+        url: '/activities/edit/'+activity_id,
+        type: 'GET',
+        success: function(response) {
+          if (response) {
+            window.location.href = '/activities/edit/'+activity_id;
+          }
+        }
+    });
+}
 
+function add(activity_id)
+{
+    $.ajax({
+        url: '/activities/'+activity_id+'/add_members',
+        type: 'GET',
+        success: function(response) {
+          if (response) {
+            window.location.href = '/activities/'+activity_id+'/add_members';
+          }
+}
+    });
+}
+
+function list(activity_id)
+{
+    $.ajax({
+            url: '/activities/'+activity_id+'/list_members',
+            type: 'GET',
+            success: function(response) {
+              if (response) {
+                window.location.href = '/activities/'+activity_id+'/list_members';
+              }
+    }
+        });
+}
+</script>
 <table class="table table-striped table-bordered table-hover">
         <thead>
         <tr>
@@ -27,16 +66,22 @@
             <th>Datum</th>
             <th>Tip aktivnosti</th>
             <th>Opis tipa aktivnosti</th>
+            <th>Akcija</th>
         </tr>
         </thead>
         {% for k, v in list_records.items() %}
-            <tr class='clickable-row' data-href="{{ url_for('activities.edit_activity', activity_id = k )}}">
+            <tr>
                 {% for value in v %}
                     <td>
                         {{ value }}
                     </td>
                 {% endfor %}
 
+                <td>
+                    <button type="button" class="btn btn-warning" onclick="edit({{k}})">Uredi aktivnost</button>
+                    <button type="button" class="btn btn-info" onclick="add({{k}})">Dodaj članove na aktivnost</button>
+                    <button type="button" class="btn btn-primary" onclick="list({{k}})">Tko je bio tada?</button>
+                </td>
             </tr>
         {% endfor %}
     </table>

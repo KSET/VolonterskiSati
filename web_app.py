@@ -21,11 +21,11 @@ app.register_blueprint(activities_bp)
 DatabaseController().init_tables()
 
 
-@app.route('/', methods = ['GET'])
+@app.route('/', methods=['GET'])
 def index():
     db = DatabaseController()
-    start_date = datetime.datetime(2019, 2, 1)
-    end_date = datetime.datetime(2019, 3, 15)
+    start_date = datetime.datetime.today().replace(day=1)
+    end_date = datetime.datetime.today().replace(month=datetime.datetime.today().month + 1, day=1)
     activity = db.get_period_activity(start_date, end_date)
     total_activity = {}
     for item in activity:
@@ -63,7 +63,7 @@ def login():
 
         flash(error)
 
-    return render_template('auth/login.html')
+    return render_template('index.html')
 
 
 if __name__ == '__main__':

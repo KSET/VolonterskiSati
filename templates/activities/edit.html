@@ -24,6 +24,10 @@ function clicked(e)
             }
         })};
 }
+
+function goBack() {
+  window.history.back();
+}
 </script>
 
 <div class="container">
@@ -64,7 +68,8 @@ function clicked(e)
     </div>
       <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
-        <button type="submit" class="btn btn-warning">Submit</button>
+        <button type="submit" class="btn btn-success">Submit</button>
+        <button type="button" class="btn btn-warning" onclick="goBack()">Odustani</button>
         <button type="button" class="btn btn-danger" onclick="clicked(event)">Izbriši aktivnost</button>
       </div>
     </div>
