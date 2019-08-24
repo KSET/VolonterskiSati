@@ -58,7 +58,8 @@ def login():
             session.clear()
             session["user_id"] = user[0]  # user[0] - id
             session["username"] = user[1]  # user[1] - username
-            session["access_level"] = user[3]  # user[3] - access level
+            session["access_level"] = int(user[3])  # user[3] - access level
+            session["section"] = user[4]  # user[4] - sekcija
             return redirect(url_for('index'))
 
         flash(error)

@@ -62,7 +62,8 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for('auth.login'))
+            flash("Nedozvoljen pristup linku. Morate se ulogirati!", "danger")
+            return redirect(url_for('index'))
 
         return view(**kwargs)
 

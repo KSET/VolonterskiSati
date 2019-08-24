@@ -2,6 +2,8 @@ import sqlite3
 import os
 import DatabaseCommands
 import datetime
+import access_levels
+from flask import session
 
 
 # Date format: YYYY-MM-DD
@@ -49,8 +51,8 @@ class DatabaseController:
         self._save_changes()
 
     def add_activity_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO AKTIVNOST(naziv, opis, datum, id_vrsta_aktivnosti) VALUES (?, ?, ?, ?)",
-                            entry_values)
+        self.cursor.execute("INSERT INTO AKTIVNOST(naziv, opis, datum, sekcija, id_vrsta_aktivnosti) "
+                            "VALUES (?, ?, ?, ?, ?)", entry_values)
         self._save_changes()
 
     def edit_activity(self, activity_id, new_values):
@@ -93,9 +95,22 @@ class DatabaseController:
         self.cursor.execute(query)
         self._save_changes()
 
-    def remove_member_activity_entry(self, activity_id, member_id):
-        self.cursor.execute("DELETE FROM CLAN_AKTIVNOST WHERE id_aktivnost = ? AND id_clan = ?", (activity_id, member_id))
+    def remove_member_activity_entry(self, activity_id=None, member_id=None):
+        if activity_id is None and member_id is None:
+            return
+        base_query = "DELETE FROM CLAN_AKTIVNOST WHERE "
+        if activity_id is not None:
+            base_query += "id_aktivnost = %s " % activity_id
+        if member_id is not None:
+            if activity_id is not None:
+                base_query += "AND "
+            base_query += "id_clan = %s" % member_id
+        self.cursor.execute(base_query)
         self._save_changes()
+
+    def is_member_active(self, member_id):
+        status = self.cursor.execute('SELECT aktivan FROM CLAN WHERE id = ?', (member_id,)).fetchone()[0]
+        return status == 1
 
     """
     Methods that test existence of database entries.
@@ -157,11 +172,18 @@ class DatabaseController:
 
     def get_full_activity_info(self, activity_id=None):
         query = "select AKTIVNOST.id, AKTIVNOST.naziv, AKTIVNOST.opis, datum, TIP_AKTIVNOSTI.naziv, " \
-                "TIP_AKTIVNOSTI.opis from AKTIVNOST inner join TIP_AKTIVNOSTI " \
+                "TIP_AKTIVNOSTI.opis, AKTIVNOST.sekcija from AKTIVNOST inner join TIP_AKTIVNOSTI " \
                 "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id "
 
         if activity_id is not None:
             query = "%s WHERE AKTIVNOST.id = %s" % (query, activity_id)
+
+        if session['access_level'] >= access_levels.SAVJETNIK:
+            if activity_id is not None:
+                query = "%s AND AKTIVNOST.sekcija = '%s'" % (query, session['section'])
+            else:
+                query = "%s WHERE AKTIVNOST.sekcija = '%s'" % (query, session['section'])
+            query = "%s OR AKTIVNOST.sekcija = 'svi'" % query
 
         self.cursor.execute(query)
 
@@ -186,10 +208,19 @@ class DatabaseController:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def get_activity_members(self, activity_id):
-        self.cursor.execute("SELECT id, ime, prezime, CLAN_AKTIVNOST.broj_sati, CLAN_AKTIVNOST.faktor "
-                            "FROM CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan "
-                            "WHERE CLAN_AKTIVNOST.id_aktivnost = ? AND broj_sati > 0", (activity_id,))
+    def get_all_members(self):
+        self.cursor.execute("SELECT * FROM CLAN WHERE sekcija = ?", (session["section"],))
+        return self.cursor.fetchall()
+
+    def get_activity_members(self, activity_id, section_specific = False):
+        query = "SELECT id, ime, prezime, CLAN_AKTIVNOST.broj_sati, CLAN_AKTIVNOST.faktor " \
+                "FROM CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
+                "WHERE CLAN_AKTIVNOST.id_aktivnost = %d AND broj_sati > 0" % int(activity_id)
+
+        if section_specific:
+            query = "%s AND sekcija = '%s'" % (query, session['section'])
+
+        self.cursor.execute(query)
         return self.cursor.fetchall()
 
     def export_data(self, data, destination_file):

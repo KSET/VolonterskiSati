@@ -5,6 +5,10 @@ from flask import (
 from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
 
+import access_levels
+
+from werkzeug.exceptions import HTTPException
+
 activities_bp = Blueprint('activities', __name__, url_prefix='/activities')
 
 
@@ -12,11 +16,14 @@ activities_bp = Blueprint('activities', __name__, url_prefix='/activities')
 def add_activity():
     db = DatabaseController()
     if request.method == 'POST':
-        # TODO: AKO JE USER STISNUO ZA ČLANOVE KOJI SU DOSLI PREUSMJERI NA FORMU GDJE SE UPISUJU ODRADENI SATI //GETLIST sa checkbox probaj
         name = request.form['name']
         description = request.form['description']
         activity_start_date = request.form['date']
         type = request.form['type']
+        try:
+            section = request.form['section']
+        except HTTPException:
+            section = session["section"]
 
         error = None
 
@@ -31,7 +38,7 @@ def add_activity():
 
         if error is None:
             activity_start_date = get_date_object(activity_start_date)
-            entry_values = (name, description, activity_start_date, type)
+            entry_values = (name, description, activity_start_date, section, type)
             db.add_activity_entry(entry_values)
             activity_id = db.get_last_row_id()
 
@@ -55,7 +62,7 @@ def list_activities():
     db = DatabaseController()
     activities = db.get_full_activity_info()
     activities_list = {}
-    for activity in activities:
+    for activity in reversed(activities):
         activities_list[activity[0]] = activity[1:]
 
     return render_template("/activities/list.html", list_records=activities_list)
@@ -110,6 +117,7 @@ def remove_activity(activity_id):
             flash(error, 'danger')
         else:
             db.remove_entry(DatabaseTables.AKTIVNOST, activity_id)
+            db.remove_member_activity_entry(activity_id=activity_id)
             flash('Aktivnost uspješno izbrisana', 'success')
 
     return "1"
@@ -200,15 +208,27 @@ def remove_activity_type(activity_type_id):
 @activities_bp.route('/<activity_id>/add_members', methods=['GET', 'POST'])
 def add_members_to_activity(activity_id):
     db = DatabaseController()
-    all_members = db.get_all_rows_from_table(DatabaseTables.CLAN)
+    if session["access_level"] >= access_levels.SAVJETNIK:  # Ako je razina ovlasti savjetnik ili manja, dohvati matičnu sekciju samo
+        all_members = db.get_all_members()
+    else:
+        all_members = db.get_all_rows_from_table(DatabaseTables.CLAN)  # Za admina dohvati sve članove
     members_list = {}
     for member in all_members:
         member_id = member[0]
         if member[11] == 1 and not db.member_activity_exists(member_id, activity_id):
             members_list[member[0]] = member[1:]
 
+    if session["access_level"] >= access_levels.SAVJETNIK:
+        sorted_list = sorted(members_list.items(), key=lambda x: x[1][1])  # Sort po prezimenu ako je unutar sekcije
+    else:
+        sorted_list = sorted(members_list.items(), key=lambda x: (x[1][-1], x[1][1]))  # Sort po sekciji prvo pa prezimenu
+
+    sorted_members = {}
+    for k, v in sorted_list:
+        sorted_members[k] = v
+
     if request.method == 'POST':
-        for member_id, _ in members_list.items():
+        for member_id, _ in sorted_members.items():
             hours_worked = request.form["hoursworked%s" % member_id]
             factor = request.form["factor%s" % member_id]
             if float(hours_worked) != 0:
@@ -218,7 +238,7 @@ def add_members_to_activity(activity_id):
         flash("Volonterski sati su uspješno izmjenjeni!", "success")
         return redirect("/activities/list")
 
-    return render_template("/activities/add_members_to_activity.html", activity_id=activity_id, members_list=members_list)
+    return render_template("/activities/add_members_to_activity.html", activity_id=activity_id, members_list=sorted_members)
 
 
 @activities_bp.route('/<activity_id>/list_members', methods=['GET'])
@@ -237,7 +257,10 @@ def list_activity_members(activity_id):
 @activities_bp.route('/<activity_id>/edit_member_hours/', methods=['GET', 'POST'])
 def edit_activity_member_hours(activity_id):
     db = DatabaseController()
-    all_members = db.get_activity_members(activity_id)
+    if session['access_level'] == access_levels.ADMIN:
+        all_members = db.get_activity_members(activity_id)
+    else:
+        all_members = db.get_activity_members(activity_id, section_specific=True)
     members_list = {}
     for member in all_members:
         members_list[member[0]] = member[1:]
@@ -246,19 +269,26 @@ def edit_activity_member_hours(activity_id):
     activity_date = get_croatian_date_format(db.get_table_row(DatabaseTables.AKTIVNOST, int(activity_id))[3])
 
     if request.method == 'POST':
+        changed = False
         for member_id, member_data in members_list.items():
             member_name, member_last_name, member_hours, member_factor = member_data
             hours_worked = request.form["hoursworked%s" % member_id]
             factor = request.form["factor%s" % member_id]
             if float(hours_worked) == 0:
                 db.remove_member_activity_entry(activity_id, member_id)
+                changed = True
             elif float(hours_worked) != member_hours or float(factor) != member_factor:
                 entry_values = (float(hours_worked), float(factor), member_id, activity_id)
                 db.edit_member_activity_entry(entry_values)
+                changed = True
             else:
                 pass
 
-        flash("Sati volontiranja uspješno izmjenjeni", 'success')
+        if changed:
+            flash("Sati volontiranja uspješno izmjenjeni", 'success')
+        else:
+            flash("Sati volontiranja su ostali isti", "info")
+
         return redirect(url_for('index'))
 
     return render_template('/activities/edit_member_hours.html', members_list=members_list, activity_name=activity_name,

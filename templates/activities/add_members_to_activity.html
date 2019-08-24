@@ -11,23 +11,13 @@
 <body>
 
 <script>
-function clicked(e)
-{
-    if(!confirm('Oprez! Pritiskom na OK podaci se neće moći vratiti! Želite li nastaviti?'))e.preventDefault();
-    else {
-        $.ajax({
-            url: '/activities/remove/'+{{activity_id}},
-            type: 'POST',
-            success: function(data)
-            {
-                window.location.href="/activities/list"
-            }
-        })};
+function goBack() {
+  window.history.back();
 }
 </script>
 
 <div class="container">
-  <h2>Forma za dodavanje članova na aktivnost</h2>
+  <h2>Forma za upis članova koji su došli na aktivnost</h2>
   <form class="form-horizontal" method="post">
       {% for k,v in members_list.items() %}
       <div class="row">
@@ -36,17 +26,21 @@ function clicked(e)
                 <input type="number" min="0" step="0.25" class="form-control" id="{{ k }}" value=0 name="hoursworked{{ k }}">
             </div>
 
-            <div class="form-group form-inline col-xs-6">
+            <div class="form-group form-inline col-xs-3">
                 <label for="factor">Faktor</label>
                 <input type="number" min="0" step="0.25" id="factor" class="form-control " value=1 name="factor{{ k }}">
+      </div>
+          <div class="form-group form-inline col-xs-3">
+                <label for="section">Sekcija</label>
+              <input type="text" id="section" class="form-control " value="{{ v[9] }}" name="factor{{ k }}" disabled>
       </div>
             </div>
       {% endfor %}
       <div class="row">
       <div class="form-group">
       <div class="col-sm-10">
-        <button type="submit" class="btn btn-warning">Submit</button>
-        <button type="button" class="btn btn-danger" onclick="clicked(event)">Izbriši aktivnost</button>
+        <button type="submit" class="btn btn-success">Submit</button>
+        <button type="button" class="btn btn-warning" onclick="goBack()">Odustani</button>
       </div>
     </div>
           </div>

@@ -4,6 +4,10 @@ from flask import (
 from werkzeug.security import generate_password_hash
 from werkzeug.exceptions import HTTPException
 
+from auth import login_required
+
+import access_levels
+
 from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
 
@@ -66,14 +70,28 @@ def add_member():
 
 
 @members_bp.route('/list', methods=['GET'])
+@login_required
 def list_members():
     db = DatabaseController()
-    members = db.get_all_rows_from_table(DatabaseTables.CLAN)
+    if session["access_level"] >= access_levels.SAVJETNIK:
+        members = db.get_all_members()
+    else:
+        members = db.get_all_rows_from_table(DatabaseTables.CLAN)
+
     members_list = {}
     for member in members:
-        members_list[member[0]] = member[1:-1]
+        if db.is_member_active(member[0]):
+            members_list[member[0]] = member[1:-1]
 
-    return render_template("/members/list.html", list_records=members_list)
+    if session["access_level"] >= access_levels.SAVJETNIK:
+        sorted_list = sorted(members_list.items(), key=lambda x: x[1][1])  # Sort po prezimenu ako je unutar sekcije
+    else:
+        sorted_list = sorted(members_list.items(), key=lambda x: (x[1][-1], x[1][1]))  # Sort po sekciji prvo pa prezimenu
+
+    sorted_members = {}
+    for k, v in sorted_list:
+        sorted_members[k] = v
+    return render_template("/members/list.html", list_records=sorted_members)
 
 
 @members_bp.route('/edit/<member_id>', methods=['GET', 'POST'])

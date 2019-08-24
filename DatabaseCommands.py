@@ -4,7 +4,8 @@ CREATE_USER_TABLE = "CREATE TABLE IF NOT EXISTS CLAN (id integer primary key, im
                     " sekcija text default '-', aktivan int default 1);"
 
 CREATE_ACTIVITY_TABLE = "CREATE TABLE IF NOT EXISTS AKTIVNOST (id integer primary key, naziv text," \
-                        " opis text default '-', datum date default '-', id_vrsta_aktivnosti integer default none," \
+                        " opis text default '-', datum date default '-', sekcija text default '-', " \
+                        "id_vrsta_aktivnosti integer default none," \
                         " foreign key(id_vrsta_aktivnosti) references TIP_AKTIVNOSTI(id));"
 
 CREATE_ACTIVITY_TYPE_TABLE = "CREATE TABLE IF NOT EXISTS TIP_AKTIVNOSTI (id integer primary key, naziv text," \
