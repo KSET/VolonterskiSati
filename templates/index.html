@@ -75,14 +75,12 @@
         <tr>
             <th>Ime i prezime</th>
             <th>Broj sati</th>
-            <th>Datum</th>
         </tr>
         </thead>
         {% for k, v in list_records.items() %}
             <tr>
-                <td>{{ k }}</td>
+                <td>{{ names[k] }}</td>
                 <td>{{ v }}</td>
-                <td> datum </td>
             </tr>
         {% endfor %}
     </table>

@@ -39,6 +39,11 @@ def add_activity():
         if error is None:
             activity_start_date = get_date_object(activity_start_date)
             entry_values = (name, description, activity_start_date, section, type)
+
+            if db.activity_exists(name, activity_start_date, section):
+                flash("Aktivnost sa istim imenom i datumom za ovu sekciju već postoji u bazi", "info")
+                return redirect(url_for('activities.add_activity'))
+
             db.add_activity_entry(entry_values)
             activity_id = db.get_last_row_id()
 

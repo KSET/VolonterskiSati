@@ -4,10 +4,13 @@ import DatabaseTables
 
 from werkzeug.security import check_password_hash
 
+import access_levels
+
 import datetime
 from auth import auth_bp
 from members import members_bp
 from activities import activities_bp
+from statistics import statistics_bp
 
 app = Flask(__name__)
 app.config.from_mapping(
@@ -17,6 +20,7 @@ app.config.from_mapping(
 app.register_blueprint(auth_bp)
 app.register_blueprint(members_bp)
 app.register_blueprint(activities_bp)
+app.register_blueprint(statistics_bp)
 
 DatabaseController().init_tables()
 
@@ -24,17 +28,25 @@ DatabaseController().init_tables()
 @app.route('/', methods=['GET'])
 def index():
     db = DatabaseController()
-    start_date = datetime.datetime.today().replace(day=1)
-    end_date = datetime.datetime.today().replace(month=datetime.datetime.today().month + 1, day=1)
-    activity = db.get_period_activity(start_date, end_date)
+    start_date = datetime.datetime.today().replace(day=1).date()
+    end_date = datetime.datetime.today().replace(month=datetime.datetime.today().month + 1, day=1).date()
+    members_activity = db.get_period_activity(start_date, end_date)
     total_activity = {}
-    for item in activity:
-        key = "%s %s" % (item[0], item[1])
+    member_names = {}
+    for member in members_activity:
+        key = member[0]
         if key not in total_activity:
             total_activity[key] = 0
-        total_activity[key] += item[2] * item[3]
+        total_activity[key] += member[3]  # Beztežinski sati
+        member_names[key] = "%s %s" % (member[1], member[2])
 
-    return render_template("index.html", list_records=total_activity)
+    sorted_list = sorted(total_activity.items(), reverse=True, key=lambda x: x[1])
+
+    sorted_activity = {}
+    for k, v in sorted_list:
+        sorted_activity[k] = v
+
+    return render_template("index.html", list_records=sorted_activity, names=member_names)
 
 
 @app.route('/', methods=['POST'])

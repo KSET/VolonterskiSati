@@ -123,6 +123,11 @@ class DatabaseController:
         self.cursor.execute('SELECT id FROM CLAN WHERE broj_iskaznice = ?', (card_id, ))
         return self.cursor.fetchone() is not None
 
+    def activity_exists(self, name, date, section):
+        self.cursor.execute('SELECT * FROM AKTIVNOST WHERE naziv = ? AND datum = ? AND sekcija = ?',
+                            (name, date, section))
+        return self.cursor.fetchone() is not None
+
     def activity_type_exists(self, name):
         self.cursor.execute('SELECT id FROM TIP_AKTIVNOSTI WHERE naziv = ?', (name, ))
         return self.cursor.fetchone() is not None
@@ -196,10 +201,19 @@ class DatabaseController:
         if start_date is None:
             start_date = end_date.replace(day=1)
 
-        self.cursor.execute("select ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv "
-                            "from CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan "
-                            "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id "
-                            "where datum >= ? and datum <= ?", (start_date, end_date))
+        query = "select CLAN.id, ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv " \
+                "from CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
+                "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id " \
+                "where datum >= '%s' and datum <= '%s'" % (start_date, end_date)
+
+        #  Ako nitko nije logiran nemoj bacat grešku
+        try:
+            if session['access_level'] >= access_levels.SAVJETNIK:
+                query = "%s and CLAN.sekcija = '%s'" % (query, session['section'])
+        except KeyError:
+            pass
+
+        self.cursor.execute(query)
 
         return self.cursor.fetchall()
 
