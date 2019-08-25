@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <style>
+  .modal-header, h4, .close {
+    background-color: #f49b13;
+    color:white !important;
+    text-align: center;
+    font-size: 30px;
+  }
+  .modal-footer {
+    background-color: #f9f9f9;
+  }
+  </style>
+</head>
+<body>
+<h2>Statistika člana {{member[0]}} {{member[1]}} ({{member[2]}}) od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine</h2>
+<form class="form-vertical" method="post">
+<label for="start_date">Izaberi početni datum:</label>
+<input type="date" id="start_date" name="start_date"
+       value="{{years[0]}}-{{monthds[0]}}-{{days[0]}}">
+    <label for="end_date">Izaberi konačni datum:</label>
+<input type="date" id="end_date" name="end_date"
+       value="{{years[1]}}-{{monthds[1]}}-{{days[1]}}">
+    <button type="submit" class="btn btn-success" name="action">Potvrdi</button>
+<table class="table table-hover table-striped table-bordered">
+  <thead>
+    <tr>
+      <th scope="col">Tip aktivnosti</th>
+      <th scope="col">Sati</th>
+      <th scope="col">Težinski sati</th>
+      <th scope="col">Postotak dolaznosti</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for k, v in activity_types.items() %}
+        <tr>
+         <th scope="row">{{v}}</th>
+            <td>{{hours[k]}}</td>
+            <td>{{hours_w[k]}}</td>
+            <td>{{percentage[k]}}</td>
+        </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+</body>
+{% endblock content %}

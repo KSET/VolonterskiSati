@@ -7,12 +7,15 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 </head>
 <body>
-<h2 style="text-align:center">Statistika za {{month}}. mjesec {{year}}. godine</h2>
-<h5 style="text-align:center">Klikom na red se otvara detaljnija statistika za tog člana</h5>
-<form class="form-horizontal" method="post">
-<label for="start">Izaberi mjesec:</label>
-<input type="month" id="start" name="month"
-       value="{{year}}-{{monthd}}">
+<h2>Statistika od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine</h2>
+<h4>Klikom na red se otvara detaljnija statistika za tog člana</h4>
+<form class="form-vertical" method="post">
+<label for="start_date">Izaberi početni datum:</label>
+<input type="date" id="start_date" name="start_date"
+       value="{{years[0]}}-{{monthds[0]}}-{{days[0]}}">
+    <label for="end_date">Izaberi konačni datum:</label>
+<input type="date" id="end_date" name="end_date"
+       value="{{years[1]}}-{{monthds[1]}}-{{days[1]}}">
     <button type="submit" class="btn btn-success" name="action">Potvrdi</button>
 </form>
 <table class="table table-striped table-bordered table-hover">

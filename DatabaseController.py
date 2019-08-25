@@ -226,7 +226,7 @@ class DatabaseController:
         self.cursor.execute("SELECT * FROM CLAN WHERE sekcija = ?", (session["section"],))
         return self.cursor.fetchall()
 
-    def get_activity_members(self, activity_id, section_specific = False):
+    def get_activity_members(self, activity_id, section_specific=False):
         query = "SELECT id, ime, prezime, CLAN_AKTIVNOST.broj_sati, CLAN_AKTIVNOST.faktor " \
                 "FROM CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
                 "WHERE CLAN_AKTIVNOST.id_aktivnost = %d AND broj_sati > 0" % int(activity_id)
@@ -236,6 +236,31 @@ class DatabaseController:
 
         self.cursor.execute(query)
         return self.cursor.fetchall()
+
+    def get_all_activities_for_member(self, member_id, start_date=None, end_date=None):
+        query = "select AKTIVNOST.id_vrsta_aktivnosti, AKTIVNOST.naziv, broj_sati, faktor " \
+                "from CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
+                "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id " \
+                "where CLAN.id = %d" % (int(member_id))
+
+        if start_date is not None:
+            query = "%s and AKTIVNOST.datum >= '%s'" % (query, start_date)
+
+        if end_date is not None:
+            query = "%s and AKTIVNOST.datum <= '%s'" % (query, end_date)
+
+        return self.cursor.execute(query).fetchall()
+
+    def get_all_activities_after_date(self, start_date, end_date):
+        query = "select TIP_AKTIVNOSTI.id, datum, AKTIVNOST.naziv, TIP_AKTIVNOSTI.naziv, " \
+                "AKTIVNOST.sekcija from AKTIVNOST inner join TIP_AKTIVNOSTI " \
+                "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id where datum >= '%s' " \
+                "and (sekcija = '%s' or sekcija = 'svi')" % (start_date, session['section'])
+
+        if end_date is not None:
+            query = "%s and datum <= '%s'" % (query, end_date)
+
+        return self.cursor.execute(query).fetchall()
 
     def export_data(self, data, destination_file):
         # TODO: Implement function

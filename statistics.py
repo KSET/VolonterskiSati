@@ -6,6 +6,7 @@ from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
 
 import datetime
+from dateutil.relativedelta import relativedelta
 
 import access_levels
 
@@ -14,22 +15,15 @@ from werkzeug.exceptions import HTTPException
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/statistics')
 
 
-@statistics_bp.route('/monthly', methods=['GET', 'POST'])
-def monthly_statistics(month=None, year=None):
+def get_interval_member_activity(start_date=None, end_date=None):
     db = DatabaseController()
-    current_date = datetime.datetime.now().date()
-    if request.method == 'POST':
-        year, month = request.form['month'].split('-')
-        month = int(month)
-        year = int(year)
-    else:
-        if month is None:
-            month = current_date.month
-        if year is None:
-            year = current_date.year
-    start_of_month = current_date.replace(year=year).replace(month=month).replace(day=1)
-    monthd = start_of_month.strftime("%m")
-    members_activity = db.get_period_activity(start_date=start_of_month, end_date=start_of_month.replace(month=month+1))
+    if start_date is None:
+        start_date = datetime.date.today().replace(day=1)
+    if end_date is None:
+        end_date = start_date + relativedelta(months=+1)
+    members_activity = db.get_period_activity(start_date=start_date,
+                                              end_date=end_date)
+
     total_activity = {}
     total_activity_weight = {}
     for member in members_activity:
@@ -61,7 +55,7 @@ def monthly_statistics(month=None, year=None):
 
     if session["access_level"] >= access_levels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), reverse=True,
-                             key=lambda x: (x[1][3], x[1][4])) # Sati -> Težinski -> Prezime
+                             key=lambda x: (x[1][3], x[1][4]))  # Sati -> Težinski -> Prezime
     else:
         #
         sorted_list = sorted(members_list.items(), reverse=True, key=lambda x: (x[1][3], x[1][4], x[1][-1]))
@@ -70,20 +64,194 @@ def monthly_statistics(month=None, year=None):
     for k, v in sorted_list:
         sorted_members[k] = v
 
-    return render_template('/statistics/monthly.html', month=month, monthd=monthd, year=year, members_list=sorted_members)
+    return sorted_members
 
-@statistics_bp.route('/interval', methods=('GET', 'POST'))
+
+@statistics_bp.route('/monthly', methods=['GET', 'POST'])
+def monthly_statistics():
+    current_date = datetime.datetime.now().date()
+    if request.method == 'POST':
+        year, month = request.form['month'].split('-')
+        month = int(month)
+        year = int(year)
+    else:
+        month = current_date.month
+        year = current_date.year
+
+    start_of_month = current_date.replace(year=year).replace(month=month).replace(day=1)
+    monthd = start_of_month.strftime("%m")
+
+    member_list = get_interval_member_activity(start_of_month)
+
+    return render_template('/statistics/monthly.html', month=month, monthd=monthd, year=year, members_list=member_list)
+
+
+@statistics_bp.route('/interval', methods=['GET', 'POST'])
 def interval_statistics():
-    return NotImplemented
+
+    if request.method == 'POST':
+        if request.form['start_date'] == '':
+            start = datetime.date.today() + relativedelta(months=-3)
+            start_year, start_month, start_day = start.year, start.month, start.day
+        else:
+            start_year, start_month, start_day = [int(x) for x in request.form['start_date'].split('-')]
+
+        if request.form['end_date'] == '':
+            current_date = datetime.date.today()
+            end_year = current_date.year
+            end_month = current_date.month
+            end_day = current_date.day
+        else:
+            end_year, end_month, end_day = [int(x) for x in request.form['end_date'].split('-')]
+    else:
+        current_date = datetime.date.today()
+        end_year = current_date.year
+        end_month = current_date.month
+        end_day = current_date.day
+
+        start = datetime.date(end_year, end_month, end_day) + relativedelta(months=-3)
+        start_year, start_month, start_day = start.year, start.month, start.day
+
+    start_date = datetime.date(start_year, start_month, start_day)
+    end_date = datetime.date(end_year, end_month, end_day)
+
+    start_monthd = start_date.strftime("%m")  # monthd - formatiran mjesec kao dvoznamenkasti broj (zbog defult inputa)
+    end_monthd = end_date.strftime("%m")
+
+    member_list = get_interval_member_activity(start_date, end_date)
+
+    months = (start_month, end_month)
+    monthds = (start_monthd, end_monthd)
+    years = (start_year, end_year)
+    days = (start_day, end_day)
+    return render_template('/statistics/interval.html', days=days, months=months, monthds=monthds,
+                           years=years, members_list=member_list)
 
 
-@statistics_bp.route('/orange', methods=['GET'])
-def above_average_activity():
-    return NotImplemented
-
-
-@statistics_bp.route('/member_statistics/<member_id>', methods=['GET'])
+@statistics_bp.route('/member_statistics/<member_id>', methods=['GET', 'POST'])
 def member_statistics(member_id):
+
+    member_info, date_joined = get_member_info(member_id)
+    activity_types = _get_activity_types()
+    end_date = None
+    if request.method == 'POST':
+        if request.form['start_date'] == '':
+            start_date = get_date_object(date_joined)
+            start_year, start_month, start_day = start_date.year, start_date.month, start_date.day
+        else:
+            start_year, start_month, start_day = [int(x) for x in request.form['start_date'].split('-')]
+
+        if request.form['end_date'] == '':
+            end_date = datetime.date.today()
+            end_year, end_month, end_day = end_date.year, end_date.month, end_date.day
+        else:
+            end_year, end_month, end_day = [int(x) for x in request.form['end_date'].split('-')]
+
+        start_date = datetime.date(start_year, start_month, start_day)
+        end_date = datetime.date(end_year, end_month, end_day)
+
+        start_monthd = start_date.strftime("%m")
+        end_monthd = end_date.strftime("%m")
+
+    else:
+        start_date = get_date_object(date_joined)
+        start_year, start_month, start_day = start_date.year, start_date.month, start_date.day
+
+        current_date = datetime.date.today()
+        end_year, end_month, end_day = current_date.year, current_date.month, current_date.day
+
+        start_monthd = start_date.strftime("%m")
+        end_monthd = current_date.strftime("%m")
+
+    member_hours, member_hours_weighted, member_attendance = get_member_activities(member_id, activity_types, start_date, end_date)
+    activity_types_count = get_max_possible_activities(activity_types, start_date, end_date)
+    attendance_percentage = {}
+
+    for activity_type, count in activity_types_count.items():
+        try:
+            attendance_percentage[activity_type] = '{0:.2f}%'.format(member_attendance[activity_type] / count * 100)
+        except ZeroDivisionError:
+            attendance_percentage[activity_type] = 'Ovaj tip aktivnosti nije održan odkad je član u klubu'
+
+    months = (start_month, end_month)
+    monthds = (start_monthd, end_monthd)
+    years = (start_year, end_year)
+    days = (start_day, end_day)
+
+    if end_date is not None and end_date < start_date:
+        flash("Početan datum je veći od prijašnjeg.", 'info')
+
+    return render_template('/statistics/member_statistics.html', activity_types=activity_types,
+                           percentage=attendance_percentage, hours=member_hours,
+                           hours_w=member_hours_weighted, member=member_info, days=days, months=months,
+                           monthds=monthds, years=years)
+
+
+def _get_activity_types():
     db = DatabaseController()
-    # TODO DOVRŠITI
-    return
+    all_types = db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI)
+    activity_types = {}
+    for _type in all_types:
+        activity_types[_type[0]] = _type[1]
+    return activity_types
+
+
+def get_member_activities(member_id, activity_types, start_date=None, end_date=None):
+    db = DatabaseController()
+    member_activities = db.get_all_activities_for_member(member_id, start_date, end_date)
+    member_hours_by_activity_type = {}
+    member_hours_by_activity_type_weighted = {}
+    member_attendance = {}
+    for activity in member_activities:
+        if activity[0] not in member_hours_by_activity_type:
+            member_hours_by_activity_type[activity[0]] = activity[2]
+        else:
+            member_hours_by_activity_type[activity[0]] += activity[2]
+
+        if activity[0] not in member_hours_by_activity_type_weighted:
+            member_hours_by_activity_type_weighted[activity[0]] = activity[2] * activity[3]
+        else:
+            member_hours_by_activity_type_weighted[activity[0]] += (activity[2] * activity[3])
+
+        if activity[0] not in member_attendance:
+            member_attendance[activity[0]] = 1
+        else:
+            member_attendance[activity[0]] += 1
+
+    # Dodaj 0 sati na tipove na koje član nije došao
+    for _type in activity_types:
+        if _type not in member_hours_by_activity_type:
+            member_hours_by_activity_type[_type] = 0
+
+        if _type not in member_hours_by_activity_type_weighted:
+            member_hours_by_activity_type_weighted[_type] = 0
+
+        if _type not in member_attendance:
+            member_attendance[_type] = 0
+
+    return member_hours_by_activity_type, member_hours_by_activity_type_weighted, member_attendance
+
+
+def get_max_possible_activities(activity_types, start_date, end_date=None):
+    db = DatabaseController()
+    activities_after_member_joined = db.get_all_activities_after_date(start_date, end_date)
+    activity_types_count = {}
+    for activity in activities_after_member_joined:
+        if activity[0] not in activity_types_count:
+            activity_types_count[activity[0]] = 1
+        else:
+            activity_types_count[activity[0]] += 1
+
+    for _type in activity_types:
+        if _type not in activity_types_count:
+            activity_types_count[_type] = 0
+
+    return activity_types_count
+
+
+def get_member_info(member_id):
+    db = DatabaseController()
+    member = db.get_table_row(DatabaseTables.CLAN, int(member_id))
+    member_info = (member[1], member[2], member[3])
+    date_joined = member[7]
+    return member_info, date_joined
