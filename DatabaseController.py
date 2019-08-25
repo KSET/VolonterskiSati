@@ -56,17 +56,17 @@ class DatabaseController:
         self._save_changes()
 
     def edit_activity(self, activity_id, new_values):
-        self.cursor.execute("UPDATE AKTIVNOST SET naziv = ?, opis = ?, datum= ?, id_vrsta_aktivnosti = ? WHERE id = ?",
-                            new_values + (activity_id, ))
+        self.cursor.execute("UPDATE AKTIVNOST SET naziv = ?, opis = ?, datum= ?, sekcija = ?, id_vrsta_aktivnosti = ? "
+                            "WHERE id = ?", new_values + (activity_id, ))
         self._save_changes()
 
     def add_activity_type_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO TIP_AKTIVNOSTI(naziv, opis) VALUES (?, ?)",
+        self.cursor.execute("INSERT INTO TIP_AKTIVNOSTI(naziv, opis, sekcija) VALUES (?, ?, ?)",
                             entry_values)
         self._save_changes()
 
     def edit_activity_type(self, activity_type_id, new_values):
-        self.cursor.execute("UPDATE TIP_AKTIVNOSTI SET naziv = ?, opis = ? WHERE id = ?",
+        self.cursor.execute("UPDATE TIP_AKTIVNOSTI SET naziv = ?, opis = ?, sekcija = ? WHERE id = ?",
                             new_values + (activity_type_id, ))
         self._save_changes()
 

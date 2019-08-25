@@ -1,16 +1,13 @@
+import datetime
+
+from dateutil.relativedelta import relativedelta
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, render_template, request, session
 )
 
-from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
-
-import datetime
-from dateutil.relativedelta import relativedelta
-
 import access_levels
-
-from werkzeug.exceptions import HTTPException
+from DatabaseController import DatabaseController, get_date_object
 
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/statistics')
 
@@ -255,3 +252,21 @@ def get_member_info(member_id):
     member_info = (member[1], member[2], member[3])
     date_joined = member[7]
     return member_info, date_joined
+
+@statistics_bp.route("/export", methods=['POST'])
+def export(member_id=None, start_date=None, end_date=None):
+    # TODO DOVRŠITI
+    db = DatabaseController()
+    if session['access_level'] == access_levels.ADMIN:
+        members_list = db.get_all_rows_from_table(DatabaseTables.CLAN)
+    else:
+        members_list = db.get_all_members()
+
+    if request.method == 'POST':
+        return
+
+    list_records = {}
+    for member in members_list:
+        list_records[member[0]] = member[1:-1]
+
+    return render_template("/statistics/export.html", list_records=list_records)

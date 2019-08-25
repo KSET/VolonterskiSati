@@ -25,6 +25,32 @@
         <input type="text" class="form-control" id="description" placeholder="Unesi opis tipa aktivnosti" name="description" required>
       </div>
     </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="section">Matična sekcija:</label>
+          {% if session['access_level'] > 0 %}
+          <div class="col-sm-10">
+              <select class="form-control" name="section" required>
+                  <option value='{{session["section"]}}' selected disabled>{{session["section"]}}</option>
+              </select>
+          </div>
+          {% else %}
+      <div class="col-sm-10">
+        <select class="form-control" id="section" name="section" required>
+            <option value="" selected disabled hidden>Izaberi dežurnu sekciju</option>
+            <option value="svi">Sve sekcije</option>
+            <option value="bike">Bike</option>
+            <option value="disco">Disco</option>
+            <option value="dramska">Dramska</option>
+            <option value="foto">Foto</option>
+            <option value="glazbena">Glazbena</option>
+            <option value="pijandure">Pijandure</option>
+            <option value="comp">Računarska</option>
+            <option value="tech">Tehnička</option>
+            <option value="video">Video</option>
+      </select>
+      </div>
+          {% endif %}
+    </div>
       <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
         <button type="submit" class="btn btn-success">Dodaj tip aktivnosti</button>

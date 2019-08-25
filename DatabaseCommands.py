@@ -9,7 +9,7 @@ CREATE_ACTIVITY_TABLE = "CREATE TABLE IF NOT EXISTS AKTIVNOST (id integer primar
                         " foreign key(id_vrsta_aktivnosti) references TIP_AKTIVNOSTI(id));"
 
 CREATE_ACTIVITY_TYPE_TABLE = "CREATE TABLE IF NOT EXISTS TIP_AKTIVNOSTI (id integer primary key, naziv text," \
-                             " opis text default '-');"
+                             " opis text default '-', sekcija text default '-');"
 
 CREATE_ACTIVITY_USER_RELATIONSHIP_TABLE = "CREATE TABLE IF NOT EXISTS CLAN_AKTIVNOST (id_clan integer," \
                                           " id_aktivnost integer, broj_sati real, faktor real," \

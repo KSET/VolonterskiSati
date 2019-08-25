@@ -6,6 +6,7 @@ from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
 
 import access_levels
+import Utilities
 
 from werkzeug.exceptions import HTTPException
 
@@ -82,6 +83,10 @@ def edit_activity(activity_id):
         description = request.form['description']
         activity_start_date = request.form['date']
         activity_type = request.form['type']
+        try:
+            section = request.form['section']
+        except HTTPException:
+            section = session["section"]
 
         error = None
 
@@ -96,7 +101,7 @@ def edit_activity(activity_id):
 
         if error is None:
             activity_start_date = get_date_object(activity_start_date)
-            entry_values = (name, description, activity_start_date, int(activity_type))
+            entry_values = (name, description, activity_start_date, section, int(activity_type))
             db.edit_activity(activity_id, entry_values)
             flash("Aktivnost %s je uspješno izmjenjena!" % name, 'success')
             return redirect(url_for('index'))
@@ -108,7 +113,7 @@ def edit_activity(activity_id):
         activity_types[row[0]] = row[1]
 
     return render_template('/activities/edit.html', activity_types=activity_types, activity=activity[1:],
-                           activity_id=activity[0])
+                           activity_id=activity[0], sections=Utilities.sections)
 
 
 @activities_bp.route('/remove/<activity_id>', methods=['POST'])
@@ -134,6 +139,10 @@ def add_activity_type():
     if request.method == 'POST':
         name = request.form['name']
         description = request.form['description']
+        try:
+            section = request.form['section']
+        except HTTPException:
+            section = session["section"]
 
         error = None
 
@@ -143,7 +152,7 @@ def add_activity_type():
             description = '-'
 
         if error is None:
-            entry_values = (name, description)
+            entry_values = (name, description, section)
             db.add_activity_type_entry(entry_values)
             flash("Tip aktivnosti %s je uspješno dodan!" % name, 'success')
             return redirect(url_for('index'))
@@ -159,11 +168,13 @@ def list_activity_types():
     activities = db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI)
     activities_list = {}
     for activity in activities:
-        activities_list[activity[0]] = activity[1:]
+        print(activity)
+        if session['access_level'] == access_levels.ADMIN:
+            activities_list[activity[0]] = activity[1:]
+        elif activity[-1] == session['section'] or activity[-1] == 'svi':
+            activities_list[activity[0]] = activity[1:-1]
 
     return render_template("/activities/list_types.html", list_records=activities_list)
-
-
 
 @activities_bp.route('/edit_type/<type_id>', methods=['GET', 'POST'])
 def edit_activity_type(type_id):
@@ -172,6 +183,11 @@ def edit_activity_type(type_id):
     if request.method == 'POST':
         name = request.form['name']
         description = request.form['description']
+
+        try:
+            section = request.form['section']
+        except HTTPException:
+            section = session["section"]
 
         error = None
 
@@ -183,7 +199,7 @@ def edit_activity_type(type_id):
             error = 'Tip aktivnosti %s već postoji u bazi podataka' % name
 
         if error is None:
-            entry_values = (name, description)
+            entry_values = (name, description, section)
             db.edit_activity_type(type_id, entry_values)
             flash("Tip aktivnosti %s je uspješno izmjenjen!" % name, 'success')
             return redirect(url_for('index'))
@@ -191,7 +207,7 @@ def edit_activity_type(type_id):
         flash(error, 'danger')
 
     return render_template('/activities/edit_type.html', activity_type=activity_type[1:],
-                           activity_type_id=activity_type[0])
+                           activity_type_id=activity_type[0], sections=Utilities.sections)
 
 
 @activities_bp.route('/remove_type/<activity_type_id>', methods=['POST'])

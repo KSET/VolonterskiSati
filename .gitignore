@@ -141,3 +141,4 @@ $RECYCLE.BIN/
 # iml and xml
 *.iml
 *.xml
+*.db

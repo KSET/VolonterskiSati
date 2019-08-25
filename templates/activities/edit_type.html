@@ -39,6 +39,22 @@ function clicked(e)
         <input type="text" class="form-control" id="description" value="{{ activity_type[1] }}" name="description" required>
       </div>
     </div>
+    {% if session['access_level'] == 0 %}
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="section">Matična sekcija:</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="section" name="section" required>
+            {% for k,v in sections.items() %}
+                {% if k == activity_type[-1] %}
+                    <option value="{{ k }}" selected>{{ activity_type[-1] }}</option>
+                {% else %}
+                <option value="{{ k }}" >{{ v }}</option>
+                {% endif %}
+            {% endfor %}
+      </select>
+      </div>
+    </div>
+      {% endif %}
       <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
         <button type="submit" class="btn btn-warning">Submit</button>
