@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+<script>
+
+function add(member_id)
+{
+    $.ajax({
+        url: '/members/'+member_id+'/activate',
+        type: 'POST',
+        success: function(data) {
+            window.location.href = '/members/archive';
+
+        }
+    });
+}
+
+function remove(e, member_id)
+{
+    if(!confirm('Oprez! Pritiskom na OK podaci se neće moći vratiti! Želite li nastaviti?'))e.preventDefault();
+    else {
+        $.ajax({
+            url: '/members/erase/'+member_id,
+            type: 'POST',
+            success: function(data)
+            {
+                window.location.href="/members/archive"
+            }
+        })};
+}
+</script>
+<h2 style="text-align:center">Popis članova koji više nisu aktivni</h2>
+<table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>Ime</th>
+            <th>Prezime</th>
+            <th>Nadimak</th>
+            <th>Datum učlanjenja</th>
+            <th>Broj iskaznice</th>
+            <th>E-mail</th>
+            <th>Sekcija</th>
+            <th>Datum zamrznuća</th>
+            {% if session['access_level'] <= 1 %}
+            <th>Akcija</th>
+            {% endif %}
+        </tr>
+        </thead>
+        {% for k, v in members_list.items() %}
+            <tr>
+                {% for value in v %}
+                    <td>
+                        {{ value }}
+                    </td>
+                {% endfor %}
+
+                <td>
+                    {% if session['access_level'] == 0 or session['section'] == v[6] %}
+                    <button type="button" class="btn btn-success" onclick="add({{k}})">Aktiviraj člana</button>
+                    {% endif %}
+                    {% if session['access_level'] == 0 %}
+                    <button type="button" class="btn btn-danger" onclick="remove(event,{{k}})">Izbriši člana</button>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+{% endblock content %}

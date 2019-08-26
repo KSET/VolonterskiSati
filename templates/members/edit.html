@@ -88,19 +88,36 @@ function goBack() {
         <input type="email" class="form-control" id="email" value="{{ member[8] }}" name="email" required>
       </div>
     </div>
-      <div class="form-group">
+      {% if session['access_level'] == 0 %}
+    <div class="form-group">
       <label class="control-label col-sm-2" for="section">Sekcija:</label>
       <div class="col-sm-10">
         <select class="form-control" id="section" name="section" required>
-            <option value="{{ member[9] }}" selected disabled>{{ member[9] }}</option>
+            {% for k,v in sections.items() %}
+                {% if k == member[9] %}
+                    <option value="{{ k }}" selected>{{ sections[member[9]] }}</option>
+                {% elif k != 'svi' %}
+                <option value="{{ k }}" >{{ v }}</option>
+                {% endif %}
+            {% endfor %}
       </select>
       </div>
     </div>
+      {% else %}
+      <div class="form-group">
+            <label class="control-label col-sm-2" for="section2">Sekcija:</label>
+            <div class="col-sm-10">
+              <select class="form-control" id="section2" name="section" required>
+                  <option value="{{ member[9] }}" selected disabled>{{ sections[member[9]] }}</option>
+            </select>
+            </div>
+          </div>
+      {% endif %}
       <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
           <button type="submit" class="btn btn-success">Submit</button>
         <button type="button" class="btn btn-warning" onclick="goBack()">Odustani</button>
-          <button type="button" class="btn btn-danger" onclick="clicked(event)">Izbriši člana</button>
+          <button type="button" class="btn btn-danger" onclick="clicked(event)">Arhiviraj člana</button>
       </div>
     </div>
   </form>

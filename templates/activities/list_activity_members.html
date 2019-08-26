@@ -43,8 +43,9 @@
         {% endfor %}
     </table>
 
-<button class="btn btn-primary" onclick="add({{activity_id}})">Dodaj članove koji su došli</button>
-<button type="button" class="btn btn-warning" onclick="edit({{activity_id}})">Izmjeni aktivnost članova</button>
+<button class="btn btn-success" onclick="add({{activity_id}})">Dodaj članove koji su došli</button>
+<button type="button" class="btn btn-primary" onclick="edit({{activity_id}})">Izmjeni aktivnost članova</button>
+<button type="button" class="btn btn-warning" onclick="goBack()">Odustani</button>
 
 <script>
     jQuery(document).ready(function($) {
@@ -78,6 +79,11 @@ function edit(activity_id)
         }
     });
 }
+
+function goBack() {
+  window.history.back();
+}
+
 </script>
 </body>
 {% endblock content %}

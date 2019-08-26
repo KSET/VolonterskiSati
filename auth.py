@@ -32,7 +32,7 @@ def register():
             error = 'User {} is already registered.'.format(username)
 
         if error is None:
-            entry_values = (username, generate_password_hash(password), access_levels.SAVJETNIK, sekcija)
+            entry_values = (username, generate_password_hash(password), access_levels.PLAVI_CLAN, sekcija)
             db.add_user_account(entry_values)
             flash("Racun uspješno napravljen!", 'success')
             return redirect(url_for('index'))
@@ -63,6 +63,30 @@ def login_required(view):
     def wrapped_view(**kwargs):
         if g.user is None:
             flash("Nedozvoljen pristup linku. Morate se ulogirati!", "danger")
+            return redirect(url_for('index'))
+
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+def savjetnik_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session['access_level'] > access_levels.SAVJETNIK:
+            flash("Nemate ovlasti za pristup linku!", "danger")
+            return redirect(url_for('index'))
+
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+def admin_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session['access_level'] > access_levels.ADMIN:
+            flash("Nemate ovlasti za pristup linku!", "danger")
             return redirect(url_for('index'))
 
         return view(**kwargs)

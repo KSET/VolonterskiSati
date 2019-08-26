@@ -43,11 +43,13 @@ class DatabaseController:
         self._save_changes()
 
     def deactivate_member(self, member_id):
-        self.cursor.execute("UPDATE CLAN SET aktivan = 0 WHERE id = ?", (member_id, ))
+        deactivation_date = datetime.date.today()
+        self.cursor.execute("UPDATE CLAN SET aktivan = 0, datum_deaktivacije = ? WHERE id = ?",
+                            (deactivation_date, member_id,))
         self._save_changes()
 
     def activate_member(self, member_id):
-        self.cursor.execute("UPDATE CLAN SET aktivan = 1 WHERE id = ?", (member_id, ))
+        self.cursor.execute("UPDATE CLAN SET aktivan = 1, datum_deaktivacije = '-' WHERE id = ?", (member_id, ))
         self._save_changes()
 
     def add_activity_entry(self, entry_values):
@@ -86,7 +88,7 @@ class DatabaseController:
         self._save_changes()
 
     def edit_user_account(self, user_id, new_values):
-        self.cursor.execute("UPDATE ACCOUNTS SET access_level = ?, sekcija = ? WHERE id = ?",
+        self.cursor.execute("UPDATE ACCOUNTS SET username = ?, access_level = ?, sekcija = ? WHERE id = ?",
                             new_values + (user_id,))
         self._save_changes()
 
@@ -120,7 +122,9 @@ class DatabaseController:
         return self.cursor.fetchone() is not None
 
     def member_exists(self, card_id):
-        self.cursor.execute('SELECT id FROM CLAN WHERE broj_iskaznice = ?', (card_id, ))
+        query = 'SELECT id FROM CLAN WHERE broj_iskaznice = "%s"' % card_id
+        print(card_id)
+        self.cursor.execute(query)
         return self.cursor.fetchone() is not None
 
     def activity_exists(self, name, date, section):
@@ -226,6 +230,10 @@ class DatabaseController:
         self.cursor.execute("SELECT * FROM CLAN WHERE sekcija = ?", (session["section"],))
         return self.cursor.fetchall()
 
+    def get_all_accounts(self):
+        query = "SELECT id, username, access_level, sekcija FROM ACCOUNTS where access_level >= %d" % session['access_level']
+        return self.cursor.execute(query).fetchall()
+
     def get_activity_members(self, activity_id, section_specific=False):
         query = "SELECT id, ime, prezime, CLAN_AKTIVNOST.broj_sati, CLAN_AKTIVNOST.faktor " \
                 "FROM CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
@@ -255,7 +263,7 @@ class DatabaseController:
         query = "select TIP_AKTIVNOSTI.id, datum, AKTIVNOST.naziv, TIP_AKTIVNOSTI.naziv, " \
                 "AKTIVNOST.sekcija from AKTIVNOST inner join TIP_AKTIVNOSTI " \
                 "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id where datum >= '%s' " \
-                "and (sekcija = '%s' or sekcija = 'svi')" % (start_date, session['section'])
+                "and (AKTIVNOST.sekcija = '%s' or AKTIVNOST.sekcija = 'svi')" % (start_date, session['section'])
 
         if end_date is not None:
             query = "%s and datum <= '%s'" % (query, end_date)

@@ -11,6 +11,7 @@ from auth import auth_bp
 from members import members_bp
 from activities import activities_bp
 from statistics import statistics_bp
+from accounts import accounts_bp
 
 app = Flask(__name__)
 app.config.from_mapping(
@@ -21,6 +22,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(members_bp)
 app.register_blueprint(activities_bp)
 app.register_blueprint(statistics_bp)
+app.register_blueprint(accounts_bp)
 
 DatabaseController().init_tables()
 

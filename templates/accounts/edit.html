@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <title>Izmjeni podatke o članu</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<script>
+function clicked(e)
+{
+    if(!confirm('Oprez! Pritiskom na OK podaci se neće moći vratiti! Želite li nastaviti?'))e.preventDefault();
+    else {
+        $.ajax({
+            url: '/accounts/remove/'+{{account_id}},
+            type: 'POST',
+            success: function(data)
+            {
+                window.location.href="/accounts/list"
+            }
+        })};
+}
+
+function goBack() {
+  window.history.back();
+}
+
+</script>
+
+<div class="container">
+  <h2>Forma za izmjenu podataka o članu</h2>
+  <form class="form-horizontal" method="post">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="name">Korisničko ime:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="name" value="{{ account[0] }}" name="username" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="level">Razina pristupa:</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="level" name="level" required>
+            {% for k,v in levels.items() %}
+                {% if k == account[1]|int %}
+                    <option value="{{ k }}" selected>{{ levels[account[1]|int] }}</option>
+                {% elif k >= session['access_level'] %}
+                <option value="{{ k }}" >{{ v }}</option>
+                {% endif %}
+            {% endfor %}
+      </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="section">Sekcija:</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="section" name="section" required>
+            {% for k,v in sections.items() %}
+                {% if k == account[-1] %}
+                    <option value="{{ k }}" selected>{{ sections[account[-1]] }}</option>
+                {% elif k != 'svi' %}
+                <option value="{{ k }}" >{{ v }}</option>
+                {% endif %}
+            {% endfor %}
+      </select>
+      </div>
+    </div>
+      <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-success">Submit</button>
+        <button type="button" class="btn btn-warning" onclick="goBack()">Odustani</button>
+          <button type="button" class="btn btn-danger" onclick="clicked(event)">Izbriši račun</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+</body>
+{% endblock content %}

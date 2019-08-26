@@ -8,4 +8,4 @@ RACUNARSKA = 'Računarska'
 TEHNICKA = 'Tech'
 VIDEO = 'Video'
 
-SVI = 'svi'
+SVI = 'Svi'

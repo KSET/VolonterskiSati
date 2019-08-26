@@ -9,6 +9,8 @@ import DatabaseTables
 import access_levels
 from DatabaseController import DatabaseController, get_date_object
 
+from auth import login_required,savjetnik_required,admin_required
+
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/statistics')
 
 
@@ -48,7 +50,7 @@ def get_interval_member_activity(start_date=None, end_date=None):
 
             members_list[member[0]] = member[1:4] + (member_hours, member_hours_w)
             if session['access_level'] == access_levels.ADMIN:
-                members_list[member[0]] += (member[-2],)
+                members_list[member[0]] += (member[-3],)
 
     if session["access_level"] >= access_levels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), reverse=True,
@@ -65,6 +67,7 @@ def get_interval_member_activity(start_date=None, end_date=None):
 
 
 @statistics_bp.route('/monthly', methods=['GET', 'POST'])
+@login_required
 def monthly_statistics():
     current_date = datetime.datetime.now().date()
     if request.method == 'POST':
@@ -84,6 +87,7 @@ def monthly_statistics():
 
 
 @statistics_bp.route('/interval', methods=['GET', 'POST'])
+@login_required
 def interval_statistics():
 
     if request.method == 'POST':
@@ -126,10 +130,11 @@ def interval_statistics():
 
 
 @statistics_bp.route('/member_statistics/<member_id>', methods=['GET', 'POST'])
+@login_required
 def member_statistics(member_id):
 
-    member_info, date_joined = get_member_info(member_id)
-    activity_types = _get_activity_types()
+    member_info, date_joined, section = get_member_info(member_id)
+    activity_types = _get_activity_types(section)
     end_date = None
     if request.method == 'POST':
         if request.form['start_date'] == '':
@@ -184,12 +189,13 @@ def member_statistics(member_id):
                            monthds=monthds, years=years)
 
 
-def _get_activity_types():
+def _get_activity_types(section):
     db = DatabaseController()
     all_types = db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI)
     activity_types = {}
-    for _type in all_types:
-        activity_types[_type[0]] = _type[1]
+    for _type in sorted(all_types, key=lambda x: x[1]):
+        if _type[3] == 'svi' or _type[3] == section:
+            activity_types[_type[0]] = _type[1]
     return activity_types
 
 
@@ -251,9 +257,13 @@ def get_member_info(member_id):
     member = db.get_table_row(DatabaseTables.CLAN, int(member_id))
     member_info = (member[1], member[2], member[3])
     date_joined = member[7]
-    return member_info, date_joined
+    section = member[10]
+    return member_info, date_joined, section
+
 
 @statistics_bp.route("/export", methods=['POST'])
+@login_required
+@savjetnik_required
 def export(member_id=None, start_date=None, end_date=None):
     # TODO DOVRŠITI
     db = DatabaseController()

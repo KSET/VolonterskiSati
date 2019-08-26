@@ -9,16 +9,22 @@
             {% else %}
             <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Članovi<span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                  <li><a href="/members/add">Dodaj člana</a></li>
+                    {% if session['access_level'] <= 1 %}
+                        <li><a href="/members/add">Dodaj člana</a></li>
+                    {% endif %}
                   <li><a href="/members/list">Lista članova</a></li>
                 </ul>
             </li>
             <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Aktivnosti<span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                  <li><a href="/activities/add">Dodaj aktivnost</a></li>
+                    {% if session['access_level'] <= 1 %}
+                        <li><a href="/activities/add">Dodaj aktivnost</a></li>
+                    {% endif %}
                   <li><a href="/activities/list">Pregled aktivnosti</a></li>
                   <li class="divider"></li>
-                    <li><a href="/activities/add_type">Dodaj tip aktivnosti</a></li>
+                    {% if session['access_level'] <= 1 %}
+                        <li><a href="/activities/add_type">Dodaj tip aktivnosti</a></li>
+                    {% endif %}
                     <li><a href="/activities/list_types">Pregled tipova aktivnosti</a></li>
                 </ul>
             </li>
@@ -28,7 +34,13 @@
                   <li><a href="/statistics/interval">Intervalna statistika</a></li>
                 </ul>
             </li>
+            {% if session['access_level'] <= 1 %}
             <li><a href="/statistics/export" id="export">Export</a></li>
+            {% endif %}
+            <li><a href="/members/archive" id="archive">Arhiva članova</a></li>
+            {% if session['access_level'] <= 1 %}
+            <li><a href="/accounts/list" id="accountlist">Lista korisničkih računa</a></li>
+            {% endif %}
             {% endif %}
         </ul>
 

@@ -8,12 +8,16 @@ import DatabaseTables
 import access_levels
 import Utilities
 
+from auth import login_required, savjetnik_required, admin_required
+
 from werkzeug.exceptions import HTTPException
 
 activities_bp = Blueprint('activities', __name__, url_prefix='/activities')
 
 
 @activities_bp.route('/add', methods=('GET', 'POST'))
+@login_required
+@savjetnik_required
 def add_activity():
     db = DatabaseController()
     if request.method == 'POST':
@@ -30,11 +34,11 @@ def add_activity():
 
         if not name:
             error = 'Username is required.'
-        elif not description:
+        if not description:
             description = '-'
-        elif not activity_start_date:
+        if not activity_start_date:
             error = 'Date is required'
-        elif not type:
+        if not type:
             error = 'Activity type value is required.'
 
         if error is None:
@@ -58,23 +62,26 @@ def add_activity():
 
     activity_types = {}
     for row in db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI):
-        activity_types[row[0]] = row[1]
+        activity_types[row[0]] = (row[1], row[3])
 
     return render_template('/activities/add.html', activity_types=activity_types)
 
 
 @activities_bp.route('/list', methods=['GET'])
+@login_required
 def list_activities():
     db = DatabaseController()
     activities = db.get_full_activity_info()
     activities_list = {}
-    for activity in reversed(activities):
+    for activity in sorted(activities, reverse=True, key=lambda x: x[3]):
         activities_list[activity[0]] = activity[1:]
 
     return render_template("/activities/list.html", list_records=activities_list)
 
 
 @activities_bp.route('/edit/<activity_id>', methods=['GET', 'POST'])
+@login_required
+@savjetnik_required
 def edit_activity(activity_id):
     db = DatabaseController()
     activity = db.get_full_activity_info(activity_id)[0]  # First index to remove the list type
@@ -92,11 +99,11 @@ def edit_activity(activity_id):
 
         if not name:
             error = 'Activity name is required.'
-        elif not description:
+        if not description:
             description = '-'
-        elif not activity_start_date:
+        if not activity_start_date:
             error = 'Date is required'
-        elif not activity_type:
+        if not activity_type:
             error = 'Activity type value is required.'
 
         if error is None:
@@ -117,6 +124,8 @@ def edit_activity(activity_id):
 
 
 @activities_bp.route('/remove/<activity_id>', methods=['POST'])
+@login_required
+@savjetnik_required
 def remove_activity(activity_id):
 
     if request.method == 'POST':
@@ -134,6 +143,8 @@ def remove_activity(activity_id):
 
 
 @activities_bp.route('/add_type', methods=['GET', 'POST'])
+@login_required
+@savjetnik_required
 def add_activity_type():
     db = DatabaseController()
     if request.method == 'POST':
@@ -148,7 +159,7 @@ def add_activity_type():
 
         if not name:
             error = 'Username is required.'
-        elif not description:
+        if not description:
             description = '-'
 
         if error is None:
@@ -163,12 +174,12 @@ def add_activity_type():
 
 
 @activities_bp.route('/list_types', methods=['GET'])
+@login_required
 def list_activity_types():
     db = DatabaseController()
     activities = db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI)
     activities_list = {}
-    for activity in activities:
-        print(activity)
+    for activity in sorted(activities, key=lambda x: x[1]):
         if session['access_level'] == access_levels.ADMIN:
             activities_list[activity[0]] = activity[1:]
         elif activity[-1] == session['section'] or activity[-1] == 'svi':
@@ -176,7 +187,10 @@ def list_activity_types():
 
     return render_template("/activities/list_types.html", list_records=activities_list)
 
+
 @activities_bp.route('/edit_type/<type_id>', methods=['GET', 'POST'])
+@login_required
+@savjetnik_required
 def edit_activity_type(type_id):
     db = DatabaseController()
     activity_type = db.get_row(DatabaseTables.TIP_AKTIVNOSTI, 'id', type_id)
@@ -193,9 +207,9 @@ def edit_activity_type(type_id):
 
         if not name:
             error = 'Name is required.'
-        elif not description:
+        if not description:
             description = '-'
-        elif activity_type[1] != name and db.activity_type_exists(name):
+        if activity_type[1] != name and db.activity_type_exists(name):
             error = 'Tip aktivnosti %s već postoji u bazi podataka' % name
 
         if error is None:
@@ -211,6 +225,8 @@ def edit_activity_type(type_id):
 
 
 @activities_bp.route('/remove_type/<activity_type_id>', methods=['POST'])
+@login_required
+@savjetnik_required
 def remove_activity_type(activity_type_id):
 
     if request.method == 'POST':
@@ -227,6 +243,8 @@ def remove_activity_type(activity_type_id):
 
 
 @activities_bp.route('/<activity_id>/add_members', methods=['GET', 'POST'])
+@login_required
+@savjetnik_required
 def add_members_to_activity(activity_id):
     db = DatabaseController()
     if session["access_level"] >= access_levels.SAVJETNIK:  # Ako je razina ovlasti savjetnik ili manja, dohvati matičnu sekciju samo
@@ -263,19 +281,22 @@ def add_members_to_activity(activity_id):
 
 
 @activities_bp.route('/<activity_id>/list_members', methods=['GET'])
+@login_required
 def list_activity_members(activity_id):
     db = DatabaseController()
     activity_members = db.get_activity_members(activity_id)
     activity_name = db.get_table_row(DatabaseTables.AKTIVNOST, int(activity_id))[1]
     activity_date = get_croatian_date_format(db.get_table_row(DatabaseTables.AKTIVNOST, int(activity_id))[3])
     members_list = {}
-    for member in activity_members:
+    for member in sorted(activity_members, reverse=True, key=lambda x: x[3]):
         members_list[member[0]] = member[1:]
     return render_template("/activities/list_activity_members.html", members_list=members_list,
                            activity_name=activity_name, activity_date=activity_date, activity_id=activity_id)
 
 
 @activities_bp.route('/<activity_id>/edit_member_hours/', methods=['GET', 'POST'])
+@login_required
+@savjetnik_required
 def edit_activity_member_hours(activity_id):
     db = DatabaseController()
     if session['access_level'] == access_levels.ADMIN:
@@ -295,7 +316,7 @@ def edit_activity_member_hours(activity_id):
             member_name, member_last_name, member_hours, member_factor = member_data
             hours_worked = request.form["hoursworked%s" % member_id]
             factor = request.form["factor%s" % member_id]
-            if float(hours_worked) == 0:
+            if not hours_worked or float(hours_worked) == 0:
                 db.remove_member_activity_entry(activity_id, member_id)
                 changed = True
             elif float(hours_worked) != member_hours or float(factor) != member_factor:
