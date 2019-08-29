@@ -268,11 +268,12 @@ def add_members_to_activity(activity_id):
 
     if request.method == 'POST':
         for member_id, _ in sorted_members.items():
-            hours_worked = request.form["hoursworked%s" % member_id]
-            factor = request.form["factor%s" % member_id]
-            if float(hours_worked) != 0:
-                if not db.member_activity_exists(member_id, activity_id):
-                    db.add_member_activity_entry((member_id, activity_id, hours_worked, factor))
+            if request.form.get('checkbox%s' % member_id):
+                hours_worked = request.form["hoursworked%s" % member_id]
+                factor = request.form["factor%s" % member_id]
+                if float(hours_worked) != 0:
+                    if not db.member_activity_exists(member_id, activity_id):
+                        db.add_member_activity_entry((member_id, activity_id, hours_worked, factor))
 
         flash("Volonterski sati su uspješno izmjenjeni!", "success")
         return redirect("/activities/list")
