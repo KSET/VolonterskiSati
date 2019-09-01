@@ -1,4 +1,5 @@
 import sekcije
+import iskaznice
 
 DATE_FORMAT = "%Y-%m-%d"
 sections = {
@@ -11,5 +12,11 @@ sections = {
     'pijandure': sekcije.PLANINARSKA,
     'comp': sekcije.RACUNARSKA,
     'tech': sekcije.TEHNICKA,
-    'video': sekcije.VIDEO,
+    'video': sekcije.VIDEO
+}
+
+card_colors = {
+    iskaznice.CRVENA: "Crvena",
+    iskaznice.NARANCASTA: "Narančasta",
+    iskaznice.PLAVA: "Plava"
 }

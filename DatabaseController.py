@@ -26,6 +26,8 @@ class DatabaseController:
         self.cursor.execute(DatabaseCommands.CREATE_ACTIVITY_TABLE)
         self.cursor.execute(DatabaseCommands.CREATE_ACTIVITY_USER_RELATIONSHIP_TABLE)
         self.cursor.execute(DatabaseCommands.CREATE_ACTIVITY_TYPE_TABLE)
+        self.cursor.execute(DatabaseCommands.CREATE_MEMBERS_SECTION_RELATIONSHIP_TABLE)
+        self.cursor.execute(DatabaseCommands.CREATE_MEMBERS_CARDS_RELATIONSHIP_TABLE)
         self.conn.commit()
 
     def _save_changes(self):
@@ -35,11 +37,11 @@ class DatabaseController:
     entry_values = tuple containing argument values corresponding to those defined before keyword values.
     """
     def add_member_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO CLAN(ime, prezime, nadimak, oib, mobitel, datum_rodenja, datum_uclanjenja, broj_iskaznice, email, sekcija) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);" , entry_values)
+        self.cursor.execute("INSERT INTO CLAN(ime, prezime, nadimak, oib, mobitel, datum_rodenja, datum_uclanjenja, broj_iskaznice, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);" , entry_values)
         self._save_changes()
 
     def edit_member(self, member_id, new_values):
-        self.cursor.execute("UPDATE CLAN SET ime = ?, prezime = ?, nadimak = ?, oib = ?, mobitel = ?, datum_rodenja = ?, datum_uclanjenja = ?, broj_iskaznice = ?, email = ?, sekcija = ? WHERE id = ?", new_values + (member_id, ))
+        self.cursor.execute("UPDATE CLAN SET ime = ?, prezime = ?, nadimak = ?, oib = ?, mobitel = ?, datum_rodenja = ?, datum_uclanjenja = ?, broj_iskaznice = ?, email = ? WHERE id = ?", new_values + (member_id, ))
         self._save_changes()
 
     def deactivate_member(self, member_id):
@@ -50,6 +52,30 @@ class DatabaseController:
 
     def activate_member(self, member_id):
         self.cursor.execute("UPDATE CLAN SET aktivan = 1, datum_deaktivacije = '-' WHERE id = ?", (member_id, ))
+        self._save_changes()
+
+    def add_member_to_section(self, entry_values):
+        self.cursor.execute("INSERT INTO CLAN_SEKCIJE(id_clan, sekcija, datum_uclanjenja, maticna_sekcija) VALUES (?, ?, ?, ?);", entry_values)
+        self._save_changes()
+
+    def edit_member_section(self, entry_values):
+        self.cursor.execute("UPDATE CLAN_SEKCIJE SET sekcija = ?, datum_uclanjenja = ? "
+                            "WHERE id_clan = ? and maticna_sekcija = 1", entry_values)
+        self._save_changes()
+
+    def change_member_section_to_primary(self, member_id, section_name):
+        self.cursor.execute("UPDATE CLAN_SEKCIJE SET maticna_sekcija = 1 WHERE id_clan = ? and sekcija = ?",
+                            (member_id, section_name))
+        self.cursor.execute("UPDATE CLAN_SEKCIJE SET maticna_sekcija = 0 WHERE id_clan = ? and sekcija != ?",
+                            (member_id, section_name))
+        self._save_changes()
+
+    def add_member_card(self, entry_values):
+        self.cursor.execute("INSERT INTO CLAN_ISKAZNICE (id_clan, iskaznica, datum_izdavanja) VALUES (?, ?, ?)", entry_values)
+        self._save_changes()
+
+    def edit_member_card(self, entry_values):
+        self.cursor.execute("UPDATE CLAN_ISKAZNICE SET datum_izdavanja = ? WHERE id_clan = ? and iskaznica = ?", entry_values)
         self._save_changes()
 
     def add_activity_entry(self, entry_values):
@@ -123,7 +149,11 @@ class DatabaseController:
 
     def member_exists(self, card_id):
         query = 'SELECT id FROM CLAN WHERE broj_iskaznice = "%s"' % card_id
-        print(card_id)
+        self.cursor.execute(query)
+        return self.cursor.fetchone() is not None
+
+    def member_exists_by_name(self, name, last_name, nickname):
+        query = 'SELECT id FROM CLAN WHERE ime = "%s" and prezime = "%s" and nadimak = "%s"' % (name, last_name, nickname)
         self.cursor.execute(query)
         return self.cursor.fetchone() is not None
 
@@ -144,6 +174,10 @@ class DatabaseController:
     def member_activity_exists(self, member_id, activity_id):
         return self.cursor.execute('SELECT id_clan, id_aktivnost FROM CLAN_AKTIVNOST WHERE id_clan = ? '
                                    'AND id_aktivnost = ?', (member_id, activity_id)).fetchone() is not None
+
+    def member_has_card_color(self, member_id, card_color):
+        return self.cursor.execute("SELECT iskaznica FROM CLAN_ISKAZNICE WHERE id_clan = ? and iskaznica = ?",
+                                   (member_id, card_color)).fetchone() is not None
 
     """
     Generic method to fetch row with id from table table_name
@@ -206,14 +240,15 @@ class DatabaseController:
             start_date = end_date.replace(day=1)
 
         query = "select CLAN.id, ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv " \
-                "from CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
+                "from CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan " \
+                "inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
                 "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id " \
                 "where datum >= '%s' and datum <= '%s'" % (start_date, end_date)
 
         #  Ako nitko nije logiran nemoj bacat grešku
         try:
             if session['access_level'] >= access_levels.SAVJETNIK:
-                query = "%s and CLAN.sekcija = '%s'" % (query, session['section'])
+                query = "%s and CLAN_SEKCIJE.sekcija = '%s'" % (query, session['section'])
         except KeyError:
             pass
 
@@ -227,7 +262,35 @@ class DatabaseController:
         return self.cursor.fetchall()
 
     def get_all_members(self):
-        self.cursor.execute("SELECT * FROM CLAN WHERE sekcija = ?", (session["section"],))
+        self.cursor.execute("SELECT id, ime, prezime, nadimak, oib, mobitel, datum_rodenja, CLAN.datum_uclanjenja, "
+                            "broj_iskaznice, email, sekcija, aktivan , datum_deaktivacije "
+                            "FROM CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan "
+                            "WHERE sekcija = ?", (session["section"],))
+        return self.cursor.fetchall()
+
+    def get_member_by_card_id(self, card_id):
+        query = 'SELECT id FROM CLAN WHERE broj_iskaznice = "%s"' % card_id
+        self.cursor.execute(query)
+        return self.cursor.fetchone()
+
+    def get_member_card_id(self, name, last_name, nickname):
+        query = 'SELECT broj_iskaznice FROM CLAN WHERE ime = "%s" and prezime = "%s" and nadimak = "%s"' % (name, last_name, nickname)
+        self.cursor.execute(query)
+        return self.cursor.fetchone()[0]
+
+    def get_member_card_color(self, member_id):
+        self.cursor.execute("SELECT iskaznica FROM CLAN_ISKAZNICE WHERE id_clan = ? "
+                            "ORDER BY date(datum_izdavanja) DESC", (member_id, ))
+        return self.cursor.fetchone()[0]
+
+    def get_member_primary_section(self, member_id):
+        self.cursor.execute("SELECT sekcija FROM CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan "
+                            "WHERE id = ? and maticna_sekcija = 1", (member_id, ))
+        return self.cursor.fetchone()[0]
+
+    def get_all_members_sections(self, member_id):
+        self.cursor.execute("SELECT sekcija FROM CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan "
+                            "WHERE id = ?", (member_id,))
         return self.cursor.fetchall()
 
     def get_all_accounts(self):

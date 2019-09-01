@@ -8,6 +8,9 @@ from auth import login_required, savjetnik_required, admin_required
 
 import access_levels
 import Utilities
+import iskaznice
+
+import datetime
 
 from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
@@ -63,12 +66,23 @@ def add_member():
             name, last_name = registered_member[1], registered_member[2]
             error = 'Broj iskaznice već postoji i glasi na ime {0} {1}'.format(name, last_name)
 
+        if db.member_exists_by_name(name, last_name, nickname):
+            error = 'Član %s %s nadimka %s već postoji! Promijeni nadimak za uspješno dodavanje člana.' % \
+                    (name, last_name, nickname)
+
         if error is None:
             date_of_birth = get_date_object(date_of_birth)
             membership_start = get_date_object(membership_start)
             entry_values = (name, last_name, nickname, oib, phone_number, date_of_birth, membership_start,
-                            card_id, email, section)
+                            card_id, email)
             db.add_member_entry(entry_values)
+
+            db.add_member_card((db.get_member_id(name, last_name, nickname), iskaznice.PLAVA, membership_start))
+
+            member_id = db.get_member_id(name, last_name, nickname)
+            native_section = 1  # Sekcija novododanog člana je matična
+            db.add_member_to_section((member_id, section, membership_start, native_section))
+
             flash("Član %s %s je uspješno dodan!" % (name, last_name), 'success')
             return redirect(url_for('index'))
 
@@ -89,7 +103,8 @@ def list_members():
     members_list = {}
     for member in members:
         if db.is_member_active(member[0]):
-            members_list[member[0]] = member[1:-2]
+            members_list[member[0]] = member[1:-3] + (db.get_member_primary_section(member[0]), ) \
+                                      + (Utilities.card_colors[db.get_member_card_color(member[0])], )
 
     if session["access_level"] >= access_levels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), key=lambda x: x[1][1])  # Sort po prezimenu ako je unutar sekcije
@@ -99,6 +114,7 @@ def list_members():
     sorted_members = {}
     for k, v in sorted_list:
         sorted_members[k] = v
+
     return render_template("/members/list.html", list_records=sorted_members)
 
 
@@ -108,6 +124,8 @@ def list_members():
 def edit_member(member_id):
     db = DatabaseController()
     member = db.get_row(DatabaseTables.CLAN, 'id', member_id)
+    member_section = db.get_member_primary_section(member_id)
+    member_card = db.get_member_card_color(member_id)
     if request.method == 'POST':
         name = request.form['name']
         last_name = request.form['lastname']
@@ -118,10 +136,22 @@ def edit_member(member_id):
         membership_start = request.form['membership']
         card_id = request.form['idcard']
         email = request.form['email']
+
+        section_change = False
+        card_color_change = False
         try:
             section = request.form['section']
+            if section != member_section:
+                section_change = True
         except HTTPException:
-            section = member[-3]
+            section = member_section
+
+        try:
+            card_color = request.form['cardcolor']
+            if card_color != member_card:
+                card_color_change = True
+        except HTTPException:
+            card_color = member_card
 
         db = DatabaseController()
         error = None
@@ -155,14 +185,30 @@ def edit_member(member_id):
             date_of_birth = get_date_object(date_of_birth)
             membership_start = get_date_object(membership_start)
             entry_values = (name, last_name, nickname, oib, phone_number, date_of_birth, membership_start,
-                            card_id, email, section)
+                            card_id, email)
             db.edit_member(member_id, entry_values)
+
+            if section_change:
+                if member_already_joined(member_id, section):
+                    db.change_member_section_to_primary(member_id, section)
+                else:
+                    db.edit_member_section((member_id, section, datetime.date.today()))
+
+            if card_color_change:
+                today_date = datetime.date.today()
+                if not db.member_has_card_color(member_id, card_color):
+                    db.add_member_card((member_id, card_color, today_date))
+                else:
+                    db.edit_member_card((today_date, member_id, card_color))
+
             flash("Podaci člana %s %s je uspješno izmjenjen!" % (name, last_name), 'success')
             return redirect(url_for('index'))
 
         flash(error, 'danger')
 
-    return render_template('/members/edit.html', member=member[1:-1], member_id=member[0], sections=Utilities.sections)
+    return render_template('/members/edit.html', member=member[1:-2], member_section=member_section,
+                           member_id=member[0], sections=Utilities.sections, member_card=member_card,
+                           cards=Utilities.card_colors)
 
 
 @members_bp.route('/remove/<member_id>', methods=['POST'])
@@ -174,7 +220,7 @@ def remove_member(member_id):
 
         db = DatabaseController()
         if not db.entry_exists(DatabaseTables.CLAN, member_id):
-            error = 'Neuspješno brisanje. Zapis ne postoji u bazi.'
+            error = 'Neuspješno arhiviranje. Zapis ne postoji u bazi.'
             flash(error, 'danger')
         else:
             db.deactivate_member(member_id)
@@ -196,7 +242,7 @@ def erase_member(member_id):
             flash(error, 'danger')
         else:
             db.remove_entry(DatabaseTables.CLAN, member_id)
-            flash('Član uspješno arhiviran', 'success')
+            flash('Član uspješno izbrisan', 'success')
 
     return "1"
 
@@ -209,7 +255,7 @@ def archive():
     members_list = {}
     for member in sorted(all_archived_members, key=lambda x: x[10]):
         members_list[member[0]] = (member[1], member[2], member[3], member[7],
-                                   member[8], member[9], member[10], member[-1])
+                                   member[8], member[9], db.get_member_primary_section(member[0]), member[-1])
 
     return render_template('/members/archive.html', members_list=members_list)
 
@@ -223,11 +269,76 @@ def activate(member_id=None):
         db.activate_member(member_id)
         flash('Član je uspješno aktiviran', 'success')
 
-        all_archived_members = db.get_row(DatabaseTables.CLAN, 'aktivan', 0, return_all=True)
-        members_list = {}
-        for member in all_archived_members:
-            members_list[member[0]] = (member[1], member[2], member[3], member[7],
-                                       member[8], member[9], member[10], member[-1])
-
     return "1"
+
+
+@members_bp.route('/associate', methods=['GET', 'POST'])
+@login_required
+@savjetnik_required
+def associate():
+    db = DatabaseController()
+    member = ['-'] * 10
+    member_section = '-'
+    sections = Utilities.sections
+    if request.method == 'POST':
+        card_id = request.form['idcard']
+        if request.form['action'] == 'search':
+            if db.member_exists(card_id):
+                member_id = db.get_member_by_card_id(card_id)[0]
+                member = db.get_table_row(DatabaseTables.CLAN, member_id)
+                if member_already_joined(member_id, session['section']):
+                    flash("Član %s %s je već učlanjen u %s sekciju" % (member[1], member[2], session['section']), "info")
+                else:
+                    member = db.get_table_row(DatabaseTables.CLAN, member_id)
+                    member_section = db.get_member_primary_section(member_id)
+                    sections = get_available_sections_to_join(member_id)
+            else:
+                flash("Ne postoji član sa tim brojem članske iskaznice", "danger")
+        else:
+            error = None
+            if db.member_exists(card_id):
+                member_id = db.get_member_by_card_id(card_id)[0]
+                member = db.get_table_row(DatabaseTables.CLAN, member_id)
+                name = request.form['name']
+                last_name = request.form.get('lastname')
+                nickname = request.form.get('nickname')
+                section = None
+                print(db.get_member_card_id(name, last_name, nickname))
+                if card_id != db.get_member_card_id(name, last_name, nickname):
+                    error = "Broj iskaznice nije jednak broju iskaznice od nađenog člana. " \
+                            "Nakon mijenjanja broja iskaznice je potrebno pritisnuti gumb Traži."
+
+                try:
+                    section = request.form['section']
+                except HTTPException:
+                    error = "Izaberi sekciju prije potvrđivanja pridruživanja"
+
+                if error is None:
+                    membership_start = datetime.datetime.today()
+                    native_section = 0
+                    db.add_member_to_section((member_id, section, membership_start, native_section))
+
+                    flash("Člana %s %s je uspješno pridružen %s sekciji!" % (name, last_name, section), 'success')
+                    return redirect(url_for('index'))
+            else:
+                error = "Ne postoji član sa tim brojem članske iskaznice"
+            flash(error, 'danger')
+
+    return render_template('/members/associate.html', member=member[1:-2], member_section=member_section,
+                           member_id=member[0], sections=sections)
+
+
+def get_available_sections_to_join(member_id):
+    db = DatabaseController()
+    joined_sections = [x[0] for x in db.get_all_members_sections(member_id)]
+    return {x: v for x, v in Utilities.sections.items() if x not in joined_sections}
+
+
+def member_already_joined(member_id, section_name):
+    db = DatabaseController()
+    possible_sections = [x[0] for x in db.get_all_members_sections(member_id)]
+    for section in possible_sections:
+        if section == section_name:
+            return True
+    return False
 

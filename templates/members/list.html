@@ -31,11 +31,16 @@
             <th>Datum učlanjenja</th>
             <th>Broj iskaznice</th>
             <th>Email</th>
-            <th>Sekcija</th>
+            <th>Matična sekcija</th>
+            <th>Boja iskaznice</th>
         </tr>
         </thead>
         {% for k, v in list_records.items() %}
-            <tr class='clickable-row' data-href="{{ url_for('members.edit_member', member_id = k )}}">
+            {% if session['access_level'] == 1 and session['section'] != v[9] %}
+                <tr>
+            {% else %}
+                <tr class='clickable-row' data-href="{{ url_for('members.edit_member', member_id = k )}}">
+            {% endif %}
                 {% for value in v %}
                     <td>
                         {{ value }}
