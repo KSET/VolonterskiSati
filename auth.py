@@ -1,5 +1,5 @@
 import functools
-import access_levels
+from constants import AccessLevels
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
@@ -32,7 +32,7 @@ def register():
             error = 'User {} is already registered.'.format(username)
 
         if error is None:
-            entry_values = (username, generate_password_hash(password), access_levels.PLAVI_CLAN, sekcija)
+            entry_values = (username, generate_password_hash(password), AccessLevels.PLAVI_CLAN, sekcija)
             db.add_user_account(entry_values)
             flash("Racun uspješno napravljen!", 'success')
             return redirect(url_for('index'))
@@ -73,7 +73,7 @@ def login_required(view):
 def savjetnik_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if session['access_level'] > access_levels.SAVJETNIK:
+        if session['access_level'] > AccessLevels.SAVJETNIK:
             flash("Nemate ovlasti za pristup linku!", "danger")
             return redirect(url_for('index'))
 
@@ -85,7 +85,7 @@ def savjetnik_required(view):
 def admin_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if session['access_level'] > access_levels.ADMIN:
+        if session['access_level'] > AccessLevels.ADMIN:
             flash("Nemate ovlasti za pristup linku!", "danger")
             return redirect(url_for('index'))
 

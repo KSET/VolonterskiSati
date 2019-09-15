@@ -36,10 +36,10 @@
         </tr>
         </thead>
         {% for k, v in list_records.items() %}
-            {% if session['access_level'] == 1 and session['section'] != v[9] %}
-                <tr>
-            {% else %}
+            {% if session['access_level'] == 0 or (session['access_level'] == 1 and session['section'] == v[9]) %}
                 <tr class='clickable-row' data-href="{{ url_for('members.edit_member', member_id = k )}}">
+            {% else %}
+                <tr>
             {% endif %}
                 {% for value in v %}
                     <td>

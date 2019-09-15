@@ -6,9 +6,9 @@ from werkzeug.exceptions import HTTPException
 
 from auth import login_required, savjetnik_required, admin_required
 
-import access_levels
 import Utilities
-import iskaznice
+
+from constants import Iskaznice, AccessLevels
 
 import datetime
 
@@ -77,7 +77,7 @@ def add_member():
                             card_id, email)
             db.add_member_entry(entry_values)
 
-            db.add_member_card((db.get_member_id(name, last_name, nickname), iskaznice.PLAVA, membership_start))
+            db.add_member_card((db.get_member_id(name, last_name, nickname), Iskaznice.PLAVA, membership_start))
 
             member_id = db.get_member_id(name, last_name, nickname)
             native_section = 1  # Sekcija novododanog člana je matična
@@ -95,10 +95,10 @@ def add_member():
 @login_required
 def list_members():
     db = DatabaseController()
-    if session["access_level"] >= access_levels.SAVJETNIK:
+    if session["access_level"] >= AccessLevels.SAVJETNIK:
         members = db.get_all_members()
     else:
-        members = db.get_all_rows_from_table(DatabaseTables.CLAN)
+        members = db.get_all_members_admin()
 
     members_list = {}
     for member in members:
@@ -106,7 +106,7 @@ def list_members():
             members_list[member[0]] = member[1:-3] + (db.get_member_primary_section(member[0]), ) \
                                       + (Utilities.card_colors[db.get_member_card_color(member[0])], )
 
-    if session["access_level"] >= access_levels.SAVJETNIK:
+    if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), key=lambda x: x[1][1])  # Sort po prezimenu ako je unutar sekcije
     else:
         sorted_list = sorted(members_list.items(), key=lambda x: (x[1][-1], x[1][1]))  # Sort po sekciji prvo pa prezimenu
@@ -279,7 +279,7 @@ def associate():
     db = DatabaseController()
     member = ['-'] * 10
     member_section = '-'
-    sections = Utilities.sections
+    sections = Utilities.sections_and_teams
     if request.method == 'POST':
         card_id = request.form['idcard']
         if request.form['action'] == 'search':
@@ -331,7 +331,7 @@ def associate():
 def get_available_sections_to_join(member_id):
     db = DatabaseController()
     joined_sections = [x[0] for x in db.get_all_members_sections(member_id)]
-    return {x: v for x, v in Utilities.sections.items() if x not in joined_sections}
+    return {x: v for x, v in Utilities.sections_and_teams.items() if x not in joined_sections}
 
 
 def member_already_joined(member_id, section_name):

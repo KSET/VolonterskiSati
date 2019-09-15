@@ -1,22 +1,28 @@
-import sekcije
-import iskaznice
+from constants import *
 
 DATE_FORMAT = "%Y-%m-%d"
 sections = {
-    'svi': sekcije.SVI,
-    'bike': sekcije.BIKE,
-    'disco': sekcije.DISCO,
-    'dramska': sekcije.DRAMSKA,
-    'foto': sekcije.FOTO,
-    'glazbena': sekcije.GLAZBENA,
-    'pijandure': sekcije.PLANINARSKA,
-    'comp': sekcije.RACUNARSKA,
-    'tech': sekcije.TEHNICKA,
-    'video': sekcije.VIDEO
+    'svi': Sekcije.SVI,
+    'bike': Sekcije.BIKE,
+    'disco': Sekcije.DISCO,
+    'dramska': Sekcije.DRAMSKA,
+    'foto': Sekcije.FOTO,
+    'glazbena': Sekcije.GLAZBENA,
+    'pijandure': Sekcije.PLANINARSKA,
+    'comp': Sekcije.RACUNARSKA,
+    'tech': Sekcije.TEHNICKA,
+    'video': Sekcije.VIDEO
 }
 
+teams = {
+    'pr': Timovi.PR,
+    'dizajn': Timovi.DIZAJN
+}
+
+sections_and_teams = {**sections, **teams}
+
 card_colors = {
-    iskaznice.CRVENA: "Crvena",
-    iskaznice.NARANCASTA: "Narančasta",
-    iskaznice.PLAVA: "Plava"
+    Iskaznice.CRVENA: "Crvena",
+    Iskaznice.NARANCASTA: "Narančasta",
+    Iskaznice.PLAVA: "Plava"
 }

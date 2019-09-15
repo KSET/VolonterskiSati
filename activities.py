@@ -5,7 +5,7 @@ from flask import (
 from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
 
-import access_levels
+from constants import AccessLevels
 import Utilities
 
 from auth import login_required, savjetnik_required, admin_required
@@ -180,7 +180,7 @@ def list_activity_types():
     activities = db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI)
     activities_list = {}
     for activity in sorted(activities, key=lambda x: x[1]):
-        if session['access_level'] == access_levels.ADMIN:
+        if session['access_level'] == AccessLevels.ADMIN:
             activities_list[activity[0]] = activity[1:]
         elif activity[-1] == session['section'] or activity[-1] == 'svi':
             activities_list[activity[0]] = activity[1:-1]
@@ -247,7 +247,7 @@ def remove_activity_type(activity_type_id):
 @savjetnik_required
 def add_members_to_activity(activity_id):
     db = DatabaseController()
-    if session["access_level"] >= access_levels.SAVJETNIK:  # Ako je razina ovlasti savjetnik ili manja, dohvati matičnu sekciju samo
+    if session["access_level"] >= AccessLevels.SAVJETNIK:  # Ako je razina ovlasti savjetnik ili manja, dohvati matičnu sekciju samo
         all_members = db.get_all_members()
     else:
         all_members = db.get_all_rows_from_table(DatabaseTables.CLAN)  # Za admina dohvati sve članove
@@ -257,7 +257,7 @@ def add_members_to_activity(activity_id):
         if member[11] == 1 and not db.member_activity_exists(member_id, activity_id):
             members_list[member[0]] = member[1:]
 
-    if session["access_level"] >= access_levels.SAVJETNIK:
+    if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), key=lambda x: x[1][1])  # Sort po prezimenu ako je unutar sekcije
     else:
         sorted_list = sorted(members_list.items(), key=lambda x: (x[1][-1], x[1][1]))  # Sort po sekciji prvo pa prezimenu
@@ -300,7 +300,7 @@ def list_activity_members(activity_id):
 @savjetnik_required
 def edit_activity_member_hours(activity_id):
     db = DatabaseController()
-    if session['access_level'] == access_levels.ADMIN:
+    if session['access_level'] == AccessLevels.ADMIN:
         all_members = db.get_activity_members(activity_id)
     else:
         all_members = db.get_activity_members(activity_id, section_specific=True)

@@ -6,7 +6,7 @@ from flask import (
 )
 
 import DatabaseTables
-import access_levels
+from constants import AccessLevels
 from DatabaseController import DatabaseController, get_date_object
 
 from auth import login_required,savjetnik_required,admin_required
@@ -33,7 +33,7 @@ def get_interval_member_activity(start_date=None, end_date=None):
         total_activity[key] += member[3]  # Beztežinski sati
         total_activity_weight[key] += (member[3] * member[4])  # Množi sate sa faktorom
 
-    if session['access_level'] == access_levels.ADMIN:
+    if session['access_level'] == AccessLevels.ADMIN:
         members = db.get_all_rows_from_table(DatabaseTables.CLAN)
     else:
         members = db.get_all_members()
@@ -49,10 +49,10 @@ def get_interval_member_activity(start_date=None, end_date=None):
                 member_hours_w = total_activity_weight[key]
 
             members_list[member[0]] = member[1:4] + (member_hours, member_hours_w)
-            if session['access_level'] == access_levels.ADMIN:
+            if session['access_level'] == AccessLevels.ADMIN:
                 members_list[member[0]] += (member[-3],)
 
-    if session["access_level"] >= access_levels.SAVJETNIK:
+    if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), reverse=True,
                              key=lambda x: (x[1][3], x[1][4]))  # Sati -> Težinski -> Prezime
     else:
@@ -267,7 +267,7 @@ def get_member_info(member_id):
 def export(member_id=None, start_date=None, end_date=None):
     # TODO DOVRŠITI
     db = DatabaseController()
-    if session['access_level'] == access_levels.ADMIN:
+    if session['access_level'] == AccessLevels.ADMIN:
         members_list = db.get_all_rows_from_table(DatabaseTables.CLAN)
     else:
         members_list = db.get_all_members()

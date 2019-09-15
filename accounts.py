@@ -8,7 +8,7 @@ from auth import login_required, savjetnik_required, admin_required
 
 import Utilities
 
-import access_levels
+from constants import AccessLevels
 
 from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
@@ -25,7 +25,7 @@ def list_accounts():
     all_accounts = db.get_all_accounts()
     accounts_list = {}
     for account in sorted(all_accounts, key=lambda x: x[2]):
-        access_level = access_levels.access_levels_string[int(account[2])]
+        access_level = AccessLevels.access_levels_string[int(account[2])]
         accounts_list[account[0]] = (account[1], access_level, account[3])
 
     return render_template('/accounts/list.html', accounts_list=accounts_list)
@@ -53,8 +53,8 @@ def edit_account(account_id):
 
         flash(error, 'danger')
 
-    all_access_levels = access_levels.access_levels_string
-    sections = Utilities.sections
+    all_access_levels = AccessLevels.access_levels_string
+    sections = Utilities.sections_and_teams
     account_info = (account[1],) + account[3:]
     return render_template('/accounts/edit.html', account=account_info,
                            account_id=account_id, levels=all_access_levels, sections=sections)

@@ -4,8 +4,6 @@ import DatabaseTables
 
 from werkzeug.security import check_password_hash
 
-import access_levels
-
 import datetime
 from auth import auth_bp
 from members import members_bp

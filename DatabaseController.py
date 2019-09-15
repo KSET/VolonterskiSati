@@ -1,8 +1,8 @@
 import sqlite3
-import os
+import DatabaseTables
 import DatabaseCommands
 import datetime
-import access_levels
+from constants import AccessLevels
 from flask import session
 
 
@@ -221,7 +221,7 @@ class DatabaseController:
         if activity_id is not None:
             query = "%s WHERE AKTIVNOST.id = %s" % (query, activity_id)
 
-        if session['access_level'] >= access_levels.SAVJETNIK:
+        if session['access_level'] >= AccessLevels.SAVJETNIK:
             if activity_id is not None:
                 query = "%s AND AKTIVNOST.sekcija = '%s'" % (query, session['section'])
             else:
@@ -247,7 +247,7 @@ class DatabaseController:
 
         #  Ako nitko nije logiran nemoj bacat grešku
         try:
-            if session['access_level'] >= access_levels.SAVJETNIK:
+            if session['access_level'] >= AccessLevels.SAVJETNIK:
                 query = "%s and CLAN_SEKCIJE.sekcija = '%s'" % (query, session['section'])
         except KeyError:
             pass
@@ -255,6 +255,10 @@ class DatabaseController:
         self.cursor.execute(query)
 
         return self.cursor.fetchall()
+
+    def get_all_members_admin(self):
+        result = self.get_all_rows_from_table(DatabaseTables.CLAN)
+        return [x[:-1] for x in result]
 
     def get_all_rows_from_table(self, table_name):
         query = "SELECT * FROM %s" % table_name
@@ -300,6 +304,7 @@ class DatabaseController:
     def get_activity_members(self, activity_id, section_specific=False):
         query = "SELECT id, ime, prezime, CLAN_AKTIVNOST.broj_sati, CLAN_AKTIVNOST.faktor " \
                 "FROM CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
+                "inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan " \
                 "WHERE CLAN_AKTIVNOST.id_aktivnost = %d AND broj_sati > 0" % int(activity_id)
 
         if section_specific:
