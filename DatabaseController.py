@@ -239,26 +239,22 @@ class DatabaseController:
         if start_date is None:
             start_date = end_date.replace(day=1)
 
-        query = "select CLAN.id, ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv " \
+        query = "select CLAN.id, ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv, CLAN_SEKCIJE.sekcija, maticna_sekcija " \
                 "from CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan " \
                 "inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
                 "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id " \
                 "where datum >= '%s' and datum <= '%s'" % (start_date, end_date)
 
-        #  Ako nitko nije logiran nemoj bacat grešku
-        try:
-            if session['access_level'] >= AccessLevels.SAVJETNIK:
-                query = "%s and CLAN_SEKCIJE.sekcija = '%s'" % (query, session['section'])
-        except KeyError:
-            pass
+
+        # TODO: Ovdje se dohvaćaju svi aktivni članovi.
+        # TODO: Potrebno je nekad promjeniti logiku i odmah filtrirati po sekcijama. Trenutno se filtrira u samim metodama.
 
         self.cursor.execute(query)
 
         return self.cursor.fetchall()
 
     def get_all_members_admin(self):
-        result = self.get_all_rows_from_table(DatabaseTables.CLAN)
-        return [x[:-1] for x in result]
+        return self.get_all_rows_from_table(DatabaseTables.CLAN)
 
     def get_all_rows_from_table(self, table_name):
         query = "SELECT * FROM %s" % table_name
@@ -295,7 +291,7 @@ class DatabaseController:
     def get_all_members_sections(self, member_id):
         self.cursor.execute("SELECT sekcija FROM CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan "
                             "WHERE id = ?", (member_id,))
-        return self.cursor.fetchall()
+        return [x[0] for x in self.cursor.fetchall()]
 
     def get_all_accounts(self):
         query = "SELECT id, username, access_level, sekcija FROM ACCOUNTS where access_level >= %d" % session['access_level']
@@ -327,11 +323,11 @@ class DatabaseController:
 
         return self.cursor.execute(query).fetchall()
 
-    def get_all_activities_after_date(self, start_date, end_date):
+    def get_all_activities_after_date(self, section, start_date, end_date=None):
         query = "select TIP_AKTIVNOSTI.id, datum, AKTIVNOST.naziv, TIP_AKTIVNOSTI.naziv, " \
                 "AKTIVNOST.sekcija from AKTIVNOST inner join TIP_AKTIVNOSTI " \
                 "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id where datum >= '%s' " \
-                "and (AKTIVNOST.sekcija = '%s' or AKTIVNOST.sekcija = 'svi')" % (start_date, session['section'])
+                "and (AKTIVNOST.sekcija = '%s' or AKTIVNOST.sekcija = 'svi')" % (start_date, section)
 
         if end_date is not None:
             query = "%s and datum <= '%s'" % (query, end_date)

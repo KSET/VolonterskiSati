@@ -27,16 +27,20 @@ def get_interval_member_activity(start_date=None, end_date=None):
     total_activity_weight = {}
     for member in members_activity:
         key = member[0]
-        if key not in total_activity:
-            total_activity[key] = 0
-            total_activity_weight[key] = 0
-        total_activity[key] += member[3]  # Beztežinski sati
-        total_activity_weight[key] += (member[3] * member[4])  # Množi sate sa faktorom
+        # Prikaži člana ako je član tvoje sekcije ili ako si admin
+        test = db.get_all_members_sections(key)
+        if session['section'] in test or session['access_level'] == AccessLevels.ADMIN:
+            if key not in total_activity:
+                total_activity[key] = 0
+                total_activity_weight[key] = 0
+            total_activity[key] += member[3]  # Beztežinski sati
+            total_activity_weight[key] += (member[3] * member[4])  # Množi sate sa faktorom
 
     if session['access_level'] == AccessLevels.ADMIN:
         members = db.get_all_rows_from_table(DatabaseTables.CLAN)
     else:
         members = db.get_all_members()
+
     members_list = {}
     for member in members:
         if db.is_member_active(member[0]):
@@ -50,7 +54,7 @@ def get_interval_member_activity(start_date=None, end_date=None):
 
             members_list[member[0]] = member[1:4] + (member_hours, member_hours_w)
             if session['access_level'] == AccessLevels.ADMIN:
-                members_list[member[0]] += (member[-3],)
+                members_list[member[0]] += (db.get_member_primary_section(member[0]),)
 
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), reverse=True,
@@ -131,10 +135,14 @@ def interval_statistics():
 
 @statistics_bp.route('/member_statistics/<member_id>', methods=['GET', 'POST'])
 @login_required
+@savjetnik_required
 def member_statistics(member_id):
 
     member_info, date_joined, section = get_member_info(member_id)
-    activity_types = _get_activity_types(section)
+    member_sections = _get_member_sections(member_id)
+    activity_types = {}
+    for section in member_sections:
+        activity_types.update(_get_activity_types(section))
     end_date = None
     if request.method == 'POST':
         if request.form['start_date'] == '':
@@ -166,14 +174,16 @@ def member_statistics(member_id):
         end_monthd = current_date.strftime("%m")
 
     member_hours, member_hours_weighted, member_attendance = get_member_activities(member_id, activity_types, start_date, end_date)
-    activity_types_count = get_max_possible_activities(activity_types, start_date, end_date)
+    activity_types_count = {}
+    for section in member_sections:
+        activity_types_count.update(get_max_possible_activities(activity_types, section, start_date, end_date))
     attendance_percentage = {}
 
     for activity_type, count in activity_types_count.items():
         try:
             attendance_percentage[activity_type] = '{0:.2f}%'.format(member_attendance[activity_type] / count * 100)
         except ZeroDivisionError:
-            attendance_percentage[activity_type] = 'Ovaj tip aktivnosti nije održan odkad je član u klubu'
+            attendance_percentage[activity_type] = 'Ovaj tip aktivnosti nije održan za zadani raspon datuma.'
 
     months = (start_month, end_month)
     monthds = (start_monthd, end_monthd)
@@ -235,9 +245,14 @@ def get_member_activities(member_id, activity_types, start_date=None, end_date=N
     return member_hours_by_activity_type, member_hours_by_activity_type_weighted, member_attendance
 
 
-def get_max_possible_activities(activity_types, start_date, end_date=None):
+def _get_member_sections(member_id):
     db = DatabaseController()
-    activities_after_member_joined = db.get_all_activities_after_date(start_date, end_date)
+    return db.get_all_members_sections(member_id)
+
+
+def get_max_possible_activities(activity_types, section, start_date, end_date=None):
+    db = DatabaseController()
+    activities_after_member_joined = db.get_all_activities_after_date(section, start_date, end_date)
     activity_types_count = {}
     for activity in activities_after_member_joined:
         if activity[0] not in activity_types_count:

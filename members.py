@@ -96,14 +96,14 @@ def add_member():
 def list_members():
     db = DatabaseController()
     if session["access_level"] >= AccessLevels.SAVJETNIK:
-        members = db.get_all_members()
+        members = [x[:-3] for x in db.get_all_members()]
     else:
-        members = db.get_all_members_admin()
+        members = [x[:-2] for x in db.get_all_members_admin()]
 
     members_list = {}
     for member in members:
         if db.is_member_active(member[0]):
-            members_list[member[0]] = member[1:-3] + (db.get_member_primary_section(member[0]), ) \
+            members_list[member[0]] = member[1:] + (db.get_member_primary_section(member[0]), ) \
                                       + (Utilities.card_colors[db.get_member_card_color(member[0])], )
 
     if session["access_level"] >= AccessLevels.SAVJETNIK:
