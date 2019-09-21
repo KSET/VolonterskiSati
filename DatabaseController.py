@@ -239,9 +239,8 @@ class DatabaseController:
         if start_date is None:
             start_date = end_date.replace(day=1)
 
-        query = "select CLAN.id, ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv, CLAN_SEKCIJE.sekcija, maticna_sekcija " \
-                "from CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan " \
-                "inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
+        query = "select CLAN.id, ime, prezime, broj_sati, faktor, datum, AKTIVNOST.naziv, sekcija " \
+                "from CLAN inner join CLAN_AKTIVNOST on CLAN.id = CLAN_AKTIVNOST.id_clan " \
                 "inner join AKTIVNOST on CLAN_AKTIVNOST.id_aktivnost = AKTIVNOST.id " \
                 "where datum >= '%s' and datum <= '%s'" % (start_date, end_date)
 
@@ -327,7 +326,18 @@ class DatabaseController:
         query = "select TIP_AKTIVNOSTI.id, datum, AKTIVNOST.naziv, TIP_AKTIVNOSTI.naziv, " \
                 "AKTIVNOST.sekcija from AKTIVNOST inner join TIP_AKTIVNOSTI " \
                 "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id where datum >= '%s' " \
-                "and (AKTIVNOST.sekcija = '%s' or AKTIVNOST.sekcija = 'svi')" % (start_date, section)
+                "and AKTIVNOST.sekcija = '%s'" % (start_date, section)
+
+        if end_date is not None:
+            query = "%s and datum <= '%s'" % (query, end_date)
+
+        return self.cursor.execute(query).fetchall()
+
+    def get_all_volunteering_events(self, section, start_date, end_date=None):
+        query = "select TIP_AKTIVNOSTI.id, datum, AKTIVNOST.naziv, TIP_AKTIVNOSTI.naziv, " \
+                "AKTIVNOST.sekcija from AKTIVNOST inner join TIP_AKTIVNOSTI " \
+                "on AKTIVNOST.id_vrsta_aktivnosti = TIP_AKTIVNOSTI.id where datum >= '%s' " \
+                "and AKTIVNOST.sekcija = '%s' and TIP_AKTIVNOSTI.naziv = 'Dežurstvo'" % (start_date, section)
 
         if end_date is not None:
             query = "%s and datum <= '%s'" % (query, end_date)

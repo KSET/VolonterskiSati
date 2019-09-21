@@ -7,8 +7,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 </head>
 <body>
-<h2 style="text-align:center">Statistika od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine</h2>
-<h4 style="text-align:center">Klikom na red se otvara detaljnija statistika za tog člana</h4>
+<h2 style="text-align:center">Statistika sekcijskih dežurstava od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine</h2>
 <form class="form-vertical" method="post">
 <label for="start_date">Izaberi početni datum:</label>
 <input type="date" id="start_date" name="start_date"
@@ -21,28 +20,20 @@
 <table class="table table-striped table-bordered table-hover">
         <thead>
         <tr>
-            <th>Ime</th>
-            <th>Prezime</th>
-            <th>Nadimak</th>
-            <th>Ukupan broj sati</th>
-            <th>Ukupan broj sati težinski</th>
-            {% if session['access_level'] == 0 %}
-                <th>Sekcija</th>
-            {% endif %}
+            <th>Sekcija</th>
+            <th>Ukupan broj dežurstava</th>
         </tr>
         </thead>
         {% for section_name in sections %}
-            <tr><td colspan="5">SEKCIJA: {{section_name}}</td> </tr>
-        {% for k, v in members_list[section_name].items() %}
-            <tr class='clickable-row' data-href="{{ url_for('statistics.member_statistics', member_id = k )}}">
-                {% for value in v %}
-                    <td>
-                        {{ value }}
-                    </td>
-                {% endfor %}
+            <tr>
+                {% if section_name == 'svi' %}
+                    <td>Mješano dežurstvo</td>
+                {% else %}
+                    <td>{{sections[section_name]}}</td>
+                {% endif %}
+                <td>{{section_count[section_name]}}</td>
             </tr>
         {% endfor %}
-    {% endfor %}
     </table>
 
 <script>

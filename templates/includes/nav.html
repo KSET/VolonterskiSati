@@ -45,6 +45,9 @@
             {% if session['access_level'] <= 1 %}
             <li><a href="/accounts/list" id="accountlist">Lista korisničkih računa</a></li>
             {% endif %}
+            {% if session['access_level'] == 0 %}
+            <li><a href="/statistics/section_stats" id="section_stats">Statistika sekcijskih dežurstava</a></li>
+            {% endif %}
             {% endif %}
         </ul>
 

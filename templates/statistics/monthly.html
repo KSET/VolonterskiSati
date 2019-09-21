@@ -28,7 +28,13 @@
             {% endif %}
         </tr>
         </thead>
-        {% for k, v in members_list.items() %}
+    {% for section_name in sections %}
+        <tr>
+            <td colspan="3" align="middle" bgcolor="#ab7200">{{section_name}} sekcija</td>
+            <td>{{section_hours[section_name]['total_hours']}}</td>
+            <td>{{section_hours[section_name]['total_hours_w']}}</td>
+        </tr>
+        {% for k, v in members_list[section_name].items() %}
             <tr class='clickable-row' data-href="{{ url_for('statistics.member_statistics', member_id = k )}}">
                 {% for value in v %}
                     <td>
@@ -37,6 +43,7 @@
                 {% endfor %}
             </tr>
         {% endfor %}
+    {% endfor %}
     </table>
 
 <script>

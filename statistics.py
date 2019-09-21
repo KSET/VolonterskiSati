@@ -7,6 +7,7 @@ from flask import (
 
 import DatabaseTables
 from constants import AccessLevels
+import Utilities
 from DatabaseController import DatabaseController, get_date_object
 
 from auth import login_required,savjetnik_required,admin_required
@@ -14,12 +15,16 @@ from auth import login_required,savjetnik_required,admin_required
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/statistics')
 
 
-def get_interval_member_activity(start_date=None, end_date=None):
+def get_interval_member_activity(start_date=None, end_date=None, section=None):
     db = DatabaseController()
+
+    if section is None:
+        section = session['section']
+
     if start_date is None:
         start_date = datetime.date.today().replace(day=1)
     if end_date is None:
-        end_date = start_date + relativedelta(months=+1)
+        end_date = start_date + relativedelta(months=+1, days=-1)
     members_activity = db.get_period_activity(start_date=start_date,
                                               end_date=end_date)
 
@@ -29,7 +34,7 @@ def get_interval_member_activity(start_date=None, end_date=None):
         key = member[0]
         # Prikaži člana ako je član tvoje sekcije ili ako si admin
         test = db.get_all_members_sections(key)
-        if session['section'] in test or session['access_level'] == AccessLevels.ADMIN:
+        if section in test or session['access_level'] == AccessLevels.ADMIN:
             if key not in total_activity:
                 total_activity[key] = 0
                 total_activity_weight[key] = 0
@@ -59,13 +64,15 @@ def get_interval_member_activity(start_date=None, end_date=None):
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), reverse=True,
                              key=lambda x: (x[1][3], x[1][4]))  # Sati -> Težinski -> Prezime
-    else:
-        #
-        sorted_list = sorted(members_list.items(), reverse=True, key=lambda x: (x[1][3], x[1][4], x[1][-1]))
+    else:  # Sekcija -> Sati -> Težinski
+        sorted_list = sorted(members_list.items(), reverse=True, key=lambda x: (x[1][-1], x[1][3], x[1][4]))
 
     sorted_members = {}
     for k, v in sorted_list:
-        sorted_members[k] = v
+        section_tmp = Utilities.sections[v[-1]]
+        if section_tmp not in sorted_members:
+            sorted_members[section_tmp] = {}
+        sorted_members[section_tmp][k] = v
 
     return sorted_members
 
@@ -87,7 +94,14 @@ def monthly_statistics():
 
     member_list = get_interval_member_activity(start_of_month)
 
-    return render_template('/statistics/monthly.html', month=month, monthd=monthd, year=year, members_list=member_list)
+    all_possible_sections = [section for section in Utilities.sections.values() if section in member_list]
+
+    section_hours = {}
+    for section in all_possible_sections:
+        section_hours[section] = _get_section_hours(member_list, section)
+
+    return render_template('/statistics/monthly.html', month=month, monthd=monthd, year=year,
+                           members_list=member_list, sections=all_possible_sections, section_hours=section_hours)
 
 
 @statistics_bp.route('/interval', methods=['GET', 'POST'])
@@ -125,12 +139,14 @@ def interval_statistics():
 
     member_list = get_interval_member_activity(start_date, end_date)
 
+    all_possible_sections = [section for section in Utilities.sections if section in member_list]
+
     months = (start_month, end_month)
     monthds = (start_monthd, end_monthd)
     years = (start_year, end_year)
     days = (start_day, end_day)
     return render_template('/statistics/interval.html', days=days, months=months, monthds=monthds,
-                           years=years, members_list=member_list)
+                           years=years, members_list=member_list, sections=all_possible_sections)
 
 
 @statistics_bp.route('/member_statistics/<member_id>', methods=['GET', 'POST'])
@@ -175,15 +191,23 @@ def member_statistics(member_id):
 
     member_hours, member_hours_weighted, member_attendance = get_member_activities(member_id, activity_types, start_date, end_date)
     activity_types_count = {}
-    for section in member_sections:
-        activity_types_count.update(get_max_possible_activities(activity_types, section, start_date, end_date))
-    attendance_percentage = {}
+    for section in member_sections + ['svi']:
+        max_activities_for_section = get_max_possible_activities(activity_types, section, start_date, end_date)
+        for _type, count in max_activities_for_section.items():
+            if _type in activity_types_count:
+                activity_types_count[_type] += count
+            else:
+                activity_types_count[_type] = count
 
+    attendance_stats = {}
     for activity_type, count in activity_types_count.items():
+        attendance_stats[activity_type] = {}
+        attendance_stats[activity_type]["attendance_max"] = count
+        attendance_stats[activity_type]["attendance_count"] = member_attendance[activity_type]
         try:
-            attendance_percentage[activity_type] = '{0:.2f}%'.format(member_attendance[activity_type] / count * 100)
+            attendance_stats[activity_type]["percentage"] = '{0:.2f}%'.format(member_attendance[activity_type] / count * 100)
         except ZeroDivisionError:
-            attendance_percentage[activity_type] = 'Ovaj tip aktivnosti nije održan za zadani raspon datuma.'
+            attendance_stats[activity_type]["percentage"] = 'Ovaj tip aktivnosti nije održan za zadani raspon datuma.'
 
     months = (start_month, end_month)
     monthds = (start_monthd, end_monthd)
@@ -194,9 +218,19 @@ def member_statistics(member_id):
         flash("Početan datum je veći od prijašnjeg.", 'info')
 
     return render_template('/statistics/member_statistics.html', activity_types=activity_types,
-                           percentage=attendance_percentage, hours=member_hours,
+                           percentage=attendance_stats, hours=member_hours,
                            hours_w=member_hours_weighted, member=member_info, days=days, months=months,
                            monthds=monthds, years=years)
+
+
+def _get_section_hours(members, section):
+    total_hours = 0
+    total_hours_w = 0
+    for _, v in members[section].items():
+        total_hours += v[3]
+        total_hours_w += v[4]
+
+    return {'total_hours': total_hours, 'total_hours_w': total_hours_w}
 
 
 def _get_activity_types(section):
@@ -274,6 +308,53 @@ def get_member_info(member_id):
     date_joined = member[7]
     section = member[10]
     return member_info, date_joined, section
+
+
+@statistics_bp.route("/section_stats", methods=['GET', 'POST'])
+@login_required
+@admin_required
+def section_stats():
+    db = DatabaseController()
+    if request.method == 'POST':
+        if request.form['start_date'] == '':
+            start = datetime.date.today() + relativedelta(months=-1)
+            start_year, start_month, start_day = start.year, start.month, start.day
+        else:
+            start_year, start_month, start_day = [int(x) for x in request.form['start_date'].split('-')]
+
+        if request.form['end_date'] == '':
+            current_date = datetime.date.today()
+            end_year = current_date.year
+            end_month = current_date.month
+            end_day = current_date.day
+        else:
+            end_year, end_month, end_day = [int(x) for x in request.form['end_date'].split('-')]
+    else:
+        current_date = datetime.date.today()
+        end_year = current_date.year
+        end_month = current_date.month
+        end_day = current_date.day
+
+        start = datetime.date(end_year, end_month, end_day) + relativedelta(months=-1)
+        start_year, start_month, start_day = start.year, start.month, start.day
+
+    start_date = datetime.date(start_year, start_month, start_day)
+    end_date = datetime.date(end_year, end_month, end_day)
+
+    start_monthd = start_date.strftime("%m")  # monthd - formatiran mjesec kao dvoznamenkasti broj (zbog defult inputa)
+    end_monthd = end_date.strftime("%m")
+
+    section_event_count = {}
+    for section in Utilities.sections:
+        section_events = db.get_all_volunteering_events(section, start_date, end_date)
+        section_event_count[section] = len(section_events)
+
+    months = (start_month, end_month)
+    monthds = (start_monthd, end_monthd)
+    years = (start_year, end_year)
+    days = (start_day, end_day)
+    return render_template('/statistics/section_stats.html', days=days, months=months, monthds=monthds,
+                           sections=Utilities.sections, years=years, section_count=section_event_count)
 
 
 @statistics_bp.route("/export", methods=['POST'])

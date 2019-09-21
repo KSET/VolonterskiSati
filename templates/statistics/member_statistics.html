@@ -33,6 +33,8 @@
       <th scope="col">Tip aktivnosti</th>
       <th scope="col">Sati</th>
       <th scope="col">Težinski sati</th>
+      <th scope="col">Broj dolazaka</th>
+      <th scope="col">Broj održavanja</th>
       <th scope="col">Postotak dolaznosti</th>
     </tr>
   </thead>
@@ -42,7 +44,9 @@
          <th scope="row">{{v}}</th>
             <td>{{hours[k]}}</td>
             <td>{{hours_w[k]}}</td>
-            <td>{{percentage[k]}}</td>
+            <td>{{percentage[k]["attendance_count"]}}</td>
+            <td>{{percentage[k]["attendance_max"]}}</td>
+            <td>{{percentage[k]["percentage"]}}</td>
         </tr>
     {% endfor %}
   </tbody>

@@ -254,7 +254,7 @@ def add_members_to_activity(activity_id):
     members_list = {}
     for member in all_members:
         member_id = member[0]
-        if member[11] == 1 and not db.member_activity_exists(member_id, activity_id):
+        if member[10] == 1 and not db.member_activity_exists(member_id, activity_id):
             members_list[member[0]] = member[1:]
 
     if session["access_level"] >= AccessLevels.SAVJETNIK:
