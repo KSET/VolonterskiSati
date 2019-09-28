@@ -250,11 +250,11 @@ def add_members_to_activity(activity_id):
     if session["access_level"] >= AccessLevels.SAVJETNIK:  # Ako je razina ovlasti savjetnik ili manja, dohvati matičnu sekciju samo
         all_members = db.get_all_members()
     else:
-        all_members = db.get_all_rows_from_table(DatabaseTables.CLAN)  # Za admina dohvati sve članove
+        all_members = db.get_all_members_admin()  # Za admina dohvati sve članove
     members_list = {}
     for member in all_members:
         member_id = member[0]
-        if member[10] == 1 and not db.member_activity_exists(member_id, activity_id):
+        if db.is_member_active(member_id) and not db.member_activity_exists(member_id, activity_id):
             members_list[member[0]] = member[1:]
 
     if session["access_level"] >= AccessLevels.SAVJETNIK:

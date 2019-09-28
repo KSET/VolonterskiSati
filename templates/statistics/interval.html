@@ -26,13 +26,14 @@
             <th>Nadimak</th>
             <th>Ukupan broj sati</th>
             <th>Ukupan broj sati težinski</th>
-            {% if session['access_level'] == 0 %}
-                <th>Sekcija</th>
-            {% endif %}
         </tr>
         </thead>
         {% for section_name in sections %}
-            <tr><td colspan="5">SEKCIJA: {{section_name}}</td> </tr>
+            <tr>
+                <td colspan="3" align="middle" bgcolor="#ab7200">SEKCIJA: {{section_name}}</td>
+                <td>{{section_hours[section_name]['total_hours']}}</td>
+                <td>{{section_hours[section_name]['total_hours_w']}}</td>
+            </tr>
         {% for k, v in members_list[section_name].items() %}
             <tr class='clickable-row' data-href="{{ url_for('statistics.member_statistics', member_id = k )}}">
                 {% for value in v %}

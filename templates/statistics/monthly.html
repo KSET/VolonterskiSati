@@ -23,9 +23,7 @@
             <th>Nadimak</th>
             <th>Ukupan broj sati</th>
             <th>Ukupan broj sati težinski</th>
-            {% if session['access_level'] == 0 %}
-                <th>Sekcija</th>
-            {% endif %}
+
         </tr>
         </thead>
     {% for section_name in sections %}

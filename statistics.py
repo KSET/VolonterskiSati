@@ -57,9 +57,7 @@ def get_interval_member_activity(start_date=None, end_date=None, section=None):
                 member_hours = total_activity[key]
                 member_hours_w = total_activity_weight[key]
 
-            members_list[member[0]] = member[1:4] + (member_hours, member_hours_w)
-            if session['access_level'] == AccessLevels.ADMIN:
-                members_list[member[0]] += (db.get_member_primary_section(member[0]),)
+            members_list[member[0]] = member[1:4] + (member_hours, member_hours_w) + (db.get_member_primary_section(member[0]),)
 
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), reverse=True,
@@ -72,7 +70,7 @@ def get_interval_member_activity(start_date=None, end_date=None, section=None):
         section_tmp = Utilities.sections[v[-1]]
         if section_tmp not in sorted_members:
             sorted_members[section_tmp] = {}
-        sorted_members[section_tmp][k] = v
+        sorted_members[section_tmp][k] = v[:-1]
 
     return sorted_members
 
@@ -139,14 +137,18 @@ def interval_statistics():
 
     member_list = get_interval_member_activity(start_date, end_date)
 
-    all_possible_sections = [section for section in Utilities.sections if section in member_list]
+    all_possible_sections = [section for section in Utilities.sections.values() if section in member_list]
+
+    section_hours = {}
+    for section in all_possible_sections:
+        section_hours[section] = _get_section_hours(member_list, section)
 
     months = (start_month, end_month)
     monthds = (start_monthd, end_monthd)
     years = (start_year, end_year)
     days = (start_day, end_day)
-    return render_template('/statistics/interval.html', days=days, months=months, monthds=monthds,
-                           years=years, members_list=member_list, sections=all_possible_sections)
+    return render_template('/statistics/interval.html', days=days, months=months, monthds=monthds, years=years,
+                           members_list=member_list, sections=all_possible_sections, section_hours=section_hours)
 
 
 @statistics_bp.route('/member_statistics/<member_id>', methods=['GET', 'POST'])
@@ -370,9 +372,5 @@ def export(member_id=None, start_date=None, end_date=None):
 
     if request.method == 'POST':
         return
-
-    list_records = {}
-    for member in members_list:
-        list_records[member[0]] = member[1:-1]
 
     return render_template("/statistics/export.html", list_records=list_records)

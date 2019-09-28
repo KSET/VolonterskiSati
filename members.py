@@ -98,7 +98,7 @@ def list_members():
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         members = [x[:-3] for x in db.get_all_members()]
     else:
-        members = [x[:-2] for x in db.get_all_members_admin()]
+        members = [x[:-1] for x in db.get_all_members_admin()]
 
     members_list = {}
     for member in members:
@@ -109,7 +109,7 @@ def list_members():
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), key=lambda x: x[1][1])  # Sort po prezimenu ako je unutar sekcije
     else:
-        sorted_list = sorted(members_list.items(), key=lambda x: (x[1][-1], x[1][1]))  # Sort po sekciji prvo pa prezimenu
+        sorted_list = sorted(members_list.items(), key=lambda x: (x[1][-2], x[1][1]))  # Sort po sekciji prvo pa prezimenu
 
     sorted_members = {}
     for k, v in sorted_list:
@@ -330,13 +330,13 @@ def associate():
 
 def get_available_sections_to_join(member_id):
     db = DatabaseController()
-    joined_sections = [x[0] for x in db.get_all_members_sections(member_id)]
+    joined_sections = [x for x in db.get_all_members_sections(member_id)]
     return {x: v for x, v in Utilities.sections_and_teams.items() if x not in joined_sections}
 
 
 def member_already_joined(member_id, section_name):
     db = DatabaseController()
-    possible_sections = [x[0] for x in db.get_all_members_sections(member_id)]
+    possible_sections = [x for x in db.get_all_members_sections(member_id)]
     for section in possible_sections:
         if section == section_name:
             return True

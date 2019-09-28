@@ -253,7 +253,7 @@ class DatabaseController:
         return self.cursor.fetchall()
 
     def get_all_members_admin(self):
-        return self.get_all_rows_from_table(DatabaseTables.CLAN)
+        return [x[:-1] for x in self.get_all_rows_from_table(DatabaseTables.CLAN)]
 
     def get_all_rows_from_table(self, table_name):
         query = "SELECT * FROM %s" % table_name
@@ -262,9 +262,8 @@ class DatabaseController:
 
     def get_all_members(self):
         self.cursor.execute("SELECT id, ime, prezime, nadimak, oib, mobitel, datum_rodenja, CLAN.datum_uclanjenja, "
-                            "broj_iskaznice, email, sekcija, aktivan , datum_deaktivacije "
-                            "FROM CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan "
-                            "WHERE sekcija = ?", (session["section"],))
+                            "broj_iskaznice, email, sekcija, aktivan FROM CLAN inner join CLAN_SEKCIJE on "
+                            "CLAN.id = CLAN_SEKCIJE.id_clan WHERE sekcija = ?", (session["section"],))
         return self.cursor.fetchall()
 
     def get_member_by_card_id(self, card_id):
