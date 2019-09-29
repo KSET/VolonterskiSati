@@ -2,7 +2,7 @@ import datetime
 
 from dateutil.relativedelta import relativedelta
 from flask import (
-    Blueprint, flash, render_template, request, session
+    Blueprint, flash, render_template, request, session, Response
 )
 
 import DatabaseTables
@@ -10,7 +10,10 @@ from constants import AccessLevels
 import Utilities
 from DatabaseController import DatabaseController, get_date_object
 
-from auth import login_required,savjetnik_required,admin_required
+from auth import login_required, savjetnik_required, admin_required
+
+import io, csv
+
 
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/statistics')
 
@@ -359,18 +362,38 @@ def section_stats():
                            sections=Utilities.sections, years=years, section_count=section_event_count)
 
 
-@statistics_bp.route("/export", methods=['POST'])
+@statistics_bp.route("/export", methods=['GET'])
 @login_required
 @savjetnik_required
-def export(member_id=None, start_date=None, end_date=None):
+def export():
     # TODO DOVRŠITI
-    db = DatabaseController()
-    if session['access_level'] == AccessLevels.ADMIN:
-        members_list = db.get_all_rows_from_table(DatabaseTables.CLAN)
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    all_sections = False if request.args.get('all_sections') == 'false' else True
+
+    if all_sections and session['access_level'] == Utilities.AccessLevels.ADMIN:
+        section = 'svi'
     else:
-        members_list = db.get_all_members()
+        section = session['section']
 
-    if request.method == 'POST':
-        return
+    start_year, start_month, start_day = [int(x) for x in start_date.split('-')]
+    end_year, end_month, end_day = [int(x) for x in end_date.split('-')]
 
-    return render_template("/statistics/export.html", list_records=list_records)
+    start_date = datetime.date(start_year, start_month, start_day)
+    end_date = datetime.date(end_year, end_month, end_day)
+
+    activity_data = get_interval_member_activity(start_date, end_date, section)
+
+    new_file = "BROJ VOLONTERSKIH SATI OD %s DO %s\n" % (start_date, end_date)
+    for section in activity_data:
+        new_file += "\n#####################\n   %s SEKCIJA    \n#####################\n" % section.upper()
+        new_file += "\nIme Prezime (nadimak) -> Broj sati -> Broj sati težinski\n"
+        for entry in activity_data[section]:
+            name = activity_data[section][entry][0]
+            last_name = activity_data[section][entry][1]
+            nickname = activity_data[section][entry][2]
+            hours = activity_data[section][entry][3]
+            hours_w = activity_data[section][entry][4]
+            new_file += "%s %s (%s) ---> %s ---> %s\n" % (name, last_name, nickname, hours, hours_w)
+
+    return Response(new_file, mimetype="text", headers={"Content-disposition": "attachment; filename=export.txt"})

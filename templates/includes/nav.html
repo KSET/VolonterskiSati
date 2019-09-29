@@ -38,9 +38,6 @@
                   <li><a href="/statistics/interval">Intervalna statistika</a></li>
                 </ul>
             </li>
-            {% if session['access_level'] <= 1 %}
-            <li><a href="/statistics/export" id="export">Export</a></li>
-            {% endif %}
             <li><a href="/members/archive" id="archive">Arhiva članova</a></li>
             {% if session['access_level'] <= 1 %}
             <li><a href="/accounts/list" id="accountlist">Lista korisničkih računa</a></li>

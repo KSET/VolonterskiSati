@@ -46,12 +46,24 @@
     {% endfor %}
     </table>
 
+<button type="button" class="btn btn-success" onclick="exportData(false)">Export</button>
+{% if session['access_level'] == 0 %}
+    <button type="button" class="btn btn-primary" onclick="exportData(true)">Export svih sekcija</button>
+{% endif %}
+
 <script>
     jQuery(document).ready(function($) {
     $(".clickable-row").click(function() {
         window.location = $(this).data("href");
     });
 });
+
+function exportData(all)
+{
+    var start_date = document.getElementById('start_date').value;
+    var end_date = document.getElementById('end_date').value;
+    window.location.href="/statistics/export?start_date=" + start_date + "&end_date=" + end_date + "&all_sections=" + all;
+}
 </script>
 </body>
 {% endblock content %}
