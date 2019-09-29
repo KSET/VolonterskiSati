@@ -96,7 +96,7 @@ def add_member():
 def list_members():
     db = DatabaseController()
     if session["access_level"] >= AccessLevels.SAVJETNIK:
-        members = [x[:-3] for x in db.get_all_members()]
+        members = [x[:-2] for x in db.get_all_members()]
     else:
         members = [x[:-1] for x in db.get_all_members_admin()]
 

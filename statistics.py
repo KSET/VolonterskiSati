@@ -12,8 +12,6 @@ from DatabaseController import DatabaseController, get_date_object
 
 from auth import login_required, savjetnik_required, admin_required
 
-import io, csv
-
 
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/statistics')
 
