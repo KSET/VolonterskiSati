@@ -37,6 +37,10 @@ U nastavku su dani odgovori na moguća pitanja oko korištenja programa.
 
 Ako ispod ne postoji odgovor na tvoje pitanje, slobodno javi pa će se popis ažurirati :) .
 
+### Nemogu se registrirati
+Za uspješnu registraciju potrebno je znati pozivni kod koji se može dobiti od savjetnika svoje sekcije.
+Razina dobivene ovlasti će odgovarati upisanom pozivnom kodu.
+
 ### Pridruživanje člana sekciji
 Pridruživanje člana započinje njegovom pretragom po broju članske iskaznice.
 Ukoliko broj članske iskaznice nije poznat, javi se savjetniku sekcije iz koje se član pridružuje koji 
