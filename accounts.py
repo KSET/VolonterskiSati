@@ -59,3 +59,18 @@ def edit_account(account_id):
     return render_template('/accounts/edit.html', account=account_info,
                            account_id=account_id, levels=all_access_levels, sections=sections)
 
+
+@accounts_bp.route('/remove/<account_id>', methods=['POST'])
+@login_required
+@savjetnik_required
+def erase_member(account_id):
+    if request.method == 'POST':
+        db = DatabaseController()
+        if not db.entry_exists(DatabaseTables.KORISNICKI_RACUNI, account_id):
+            error = 'Neuspješno brisanje. Zapis ne postoji u bazi.'
+            flash(error, 'danger')
+        else:
+            db.remove_entry(DatabaseTables.KORISNICKI_RACUNI, account_id)
+            flash('Korisnički račun uspješno izbrisan', 'success')
+
+    return "1"
