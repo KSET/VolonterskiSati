@@ -16,7 +16,7 @@ Ova aplikacija može služiti za:
 
 >Arhiviranje članova
 
-Da bi se moglo koristit aplikaciju, potrebno je imati korisnički račun koji se dobije od strane Administratora.
+Da bi se moglo koristit aplikaciju, potrebno je registrirati korisnički račun.
 
 ## Kratki opis sustava
 Aplikacija je razvijena u jeziku Python verzije 3.6. Za stvaranje korisničkog web sučelja je korišten 
@@ -73,5 +73,5 @@ Administrator može napraviti eksport svih sekcija odjednom.
 
 ### Postoji problem s aplikacijom
 Ako se aplikacija ruši ili postoji bug, molim te da ga prijaviš na GitHub repozitorij preko raise Issue opcije.
-Link na repozitorij je : https://github.com/mlaggi0/VolonterskiSati
+Link na dizanje novog Issua na repozitoriju je : https://github.com/mlaggi0/VolonterskiSati/issues/new
 
