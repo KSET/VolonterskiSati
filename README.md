@@ -75,3 +75,7 @@ Administrator može napraviti eksport svih sekcija odjednom.
 Ako se aplikacija ruši ili postoji bug, molim te da ga prijaviš na GitHub repozitorij preko raise Issue opcije.
 Link na dizanje novog Issua na repozitoriju je : https://github.com/mlaggi0/VolonterskiSati/issues/new
 
+## TODO lista
+
+- [ ] Paginacija kod izlistavanja članova i aktivnosti
+- [ ] Optimizacija kontrolera baze podataka
