@@ -4,6 +4,7 @@ import DatabaseCommands
 import datetime
 from constants import AccessLevels
 from flask import session
+from constants import DATABASE_PATH
 
 
 # Date format: YYYY-MM-DD
@@ -17,7 +18,7 @@ def get_date_object(date):
 class DatabaseController:
 
     def __init__(self):
-        self.conn = sqlite3.connect("ksetBazaClanova.db")
+        self.conn = sqlite3.connect(DATABASE_PATH)
         self.cursor = self.conn.cursor()
 
     def init_tables(self):

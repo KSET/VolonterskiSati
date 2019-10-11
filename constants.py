@@ -52,3 +52,4 @@ class InviteCodes:
     }
 
 
+DATABASE_PATH = "ksetBazaClanova.db"
