@@ -6,6 +6,17 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 </head>
+<style>
+.parent ~ .cchild {
+  display: none;
+}
+.open .parent ~ .cchild {
+  display: table-row;
+}
+.parent {
+  cursor: pointer;
+}
+</style>
 <body>
 <h2 style="text-align:center">Statistika za {{month}}. mjesec {{year}}. godine</h2>
 <h5 style="text-align:center">Klikom na red se otvara detaljnija statistika za tog člana</h5>
@@ -23,17 +34,17 @@
             <th>Nadimak</th>
             <th>Ukupan broj sati</th>
             <th>Ukupan broj sati težinski</th>
-
         </tr>
         </thead>
     {% for section_name in sections %}
-        <tr>
-            <td colspan="3" align="middle" bgcolor="#ab7200">{{section_name}} sekcija</td>
+        <tbody>
+        <tr class="parent">
+            <td colspan="3" align="middle" bgcolor="#ab7200">{{section_name}} sekcija <i class="glyphicon glyphicon-user" style="align: center"></i></td>
             <td>{{section_hours[section_name]['total_hours']}}</td>
             <td>{{section_hours[section_name]['total_hours_w']}}</td>
         </tr>
         {% for k, v in members_list[section_name].items() %}
-            <tr class='clickable-row' data-href="{{ url_for('statistics.member_statistics', member_id = k )}}">
+            <tr class='clickable-row cchild' data-href="{{ url_for('statistics.member_statistics', member_id = k )}}">
                 {% for value in v %}
                     <td>
                         {{ value }}
@@ -41,6 +52,7 @@
                 {% endfor %}
             </tr>
         {% endfor %}
+        </tbody>
     {% endfor %}
     </table>
 
@@ -49,6 +61,10 @@
     $(".clickable-row").click(function() {
         window.location = $(this).data("href");
     });
+});
+
+$('table').on('click', 'tr.parent .glyphicon-user', function(){
+  $(this).closest('tbody').toggleClass('open');
 });
 </script>
 </body>

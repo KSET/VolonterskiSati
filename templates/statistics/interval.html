@@ -6,6 +6,17 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 </head>
+<style>
+.parent ~ .cchild {
+  display: none;
+}
+.open .parent ~ .cchild {
+  display: table-row;
+}
+.parent {
+  cursor: pointer;
+}
+</style>
 <body>
 <h2 style="text-align:center">Statistika od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine</h2>
 <h4 style="text-align:center">Klikom na red se otvara detaljnija statistika za tog člana</h4>
@@ -29,13 +40,14 @@
         </tr>
         </thead>
         {% for section_name in sections %}
-            <tr>
-                <td colspan="3" align="middle" bgcolor="#94908e">SEKCIJA: {{section_name}}</td>
-                <td bgcolor="#94908e">{{section_hours[section_name]['total_hours']}}</td>
-                <td bgcolor="#94908e">{{section_hours[section_name]['total_hours_w']}}</td>
+            <tbody>
+            <tr class="parent">
+                <td colspan="3" align="middle" bgcolor="#ab7200">{{section_name}} sekcija<i class="glyphicon glyphicon-user" style="align: center"></i></td>
+                <td>{{section_hours[section_name]['total_hours']}}</td>
+                <td>{{section_hours[section_name]['total_hours_w']}}</td>
             </tr>
         {% for k, v in members_list[section_name].items() %}
-            <tr class='clickable-row' data-href="{{ url_for('statistics.member_statistics', member_id = k )}}">
+            <tr class='clickable-row cchild' data-href="{{ url_for('statistics.member_statistics', member_id = k )}}">
                 {% for value in v %}
                     <td>
                         {{ value }}
@@ -43,6 +55,7 @@
                 {% endfor %}
             </tr>
         {% endfor %}
+            </tbody>
     {% endfor %}
     </table>
 
@@ -64,6 +77,10 @@ function exportData(all)
     var end_date = document.getElementById('end_date').value;
     window.location.href="/statistics/export?start_date=" + start_date + "&end_date=" + end_date + "&all_sections=" + all;
 }
+
+$('table').on('click', 'tr.parent .glyphicon-user', function(){
+  $(this).closest('tbody').toggleClass('open');
+});
 </script>
 </body>
 {% endblock content %}
