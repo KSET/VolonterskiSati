@@ -8,9 +8,11 @@ from constants import DATABASE_PATH
 
 
 # Date format: YYYY-MM-DD
-def get_date_object(date):
+def get_date_object(date, current_format=None):
     try:
-        return datetime.datetime.strptime(date, '%Y-%m-%d').date()
+        if current_format is None:
+            current_format = '%Y-%m-%d'
+        return datetime.datetime.strptime(date, current_format).date()
     except Exception as e:
         raise Exception("The format of input date is wrong. %s" % e)
 
@@ -34,11 +36,19 @@ class DatabaseController:
     def _save_changes(self):
         self.conn.commit()
 
+    def get_table_attribute_names(self, table_name):
+        query = "PRAGMA table_info(%s)" % table_name
+        self.cursor.execute(query)
+        return [x[1] for x in self.cursor.fetchall()]
     """
     entry_values = tuple containing argument values corresponding to those defined before keyword values.
     """
     def add_member_entry(self, entry_values):
         self.cursor.execute("INSERT INTO CLAN(ime, prezime, nadimak, oib, mobitel, datum_rodenja, datum_uclanjenja, broj_iskaznice, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);" , entry_values)
+        self._save_changes()
+
+    def add_member_entry_full(self, entry_values):
+        self.cursor.execute("INSERT INTO CLAN(ime, prezime, nadimak, oib, mobitel, datum_rodenja, datum_uclanjenja, broj_iskaznice, email, aktivan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);" , entry_values)
         self._save_changes()
 
     def edit_member(self, member_id, new_values):
@@ -78,6 +88,10 @@ class DatabaseController:
     def edit_member_card(self, entry_values):
         self.cursor.execute("UPDATE CLAN_ISKAZNICE SET datum_izdavanja = ? WHERE id_clan = ? and iskaznica = ?", entry_values)
         self._save_changes()
+
+    def get_member_card_ids(self):
+        self.cursor.execute("SELECT broj_iskaznice FROM CLAN")
+        return self.cursor.fetchall()
 
     def add_activity_entry(self, entry_values):
         self.cursor.execute("INSERT INTO AKTIVNOST(naziv, opis, datum, sekcija, id_vrsta_aktivnosti) "
@@ -344,13 +358,30 @@ class DatabaseController:
 
         return self.cursor.execute(query).fetchall()
 
-    def export_data(self, data, destination_file):
-        # TODO: Implement function
-        raise NotImplemented
+    # Card_id format is <letter><letter>-<year><year>
+    def generate_new_card_id(self):
+        current_card_ids = self.get_member_card_ids()
+        this_year = str(datetime.date.today().year)[-2:]
+        if len(current_card_ids) == 0:
+            return "aa-%s" % this_year
+        last_id = None
+        for card_id_tuple in current_card_ids:
+            card_id = card_id_tuple[0]
+            if '-' in card_id:
+                letters, numbers = card_id.split("-")
+                if numbers == this_year:
+                    if last_id is None:
+                        last_id = card_id
+                    elif card_id > last_id:
+                        last_id = card_id
 
-    def import_date(self, data):
-        # TODO: Implement function
-        raise NotImplemented
+        letters, numbers = last_id.split("-")
+        if letters[1] == 'z':
+            letters = "%sa" % chr(ord(letters[0]) + 1)
+        else:
+            letters = "%s%s" % (letters[0], chr(ord(letters[1]) + 1))
+
+        return "-".join((letters, numbers))
 
     def get_last_row_id(self):
         return self.cursor.lastrowid

@@ -41,6 +41,39 @@ Ako ispod ne postoji odgovor na tvoje pitanje, slobodno javi pa će se popis až
 Za uspješnu registraciju potrebno je znati pozivni kod koji se može dobiti od savjetnika svoje sekcije.
 Razina dobivene ovlasti će odgovarati upisanom pozivnom kodu.
 
+### Import podataka
+Import podataka se vrši preko komandne linije koristeći skripte import_\<ime_baze>.
+Trenutno postoje dvije skripte za import podataka:
+
+    import_members
+    
+Kod pokretanja skripte je potrebno predati putanju do csv datoteke koja sadrži podatke za import:
+    
+    python import_members <putanja_do_datoteke.csv>
+
+#### Format podataka za import
+Kod importa članova potrebno je osigurati sljedeće:
+
+    - Datoteka mora biti u csv formatu.
+    - Import podržava nazive stupaca sljedećih imena (redoslijed u tablici nije bitan):
+        ime
+        prezime
+        nadimak
+        boja_iskaznice (plava, narancasta ili crvena)
+        datum_rodenja	
+        email	
+        mobitel	
+        datum_uclanjenja	
+        oib	
+        aktivan (bit koji označava da li je član trenutno aktivan)
+        section	
+        broj_iskaznice
+    - Nedostatak bilo kojeg* od gore navedenih stupaca će biti zamijenjen vrijednošću '-'
+    - *Nedostatak polja broj_iskaznice (prazno polje) će generirati novi broj iskaznice u ovisnosti o zadnjem broju u bazi.
+        TIP: Ako broj iskaznice nije trenutno poznat moguće je u datoteci staviti "-" pa kasnije izmjeniti. 
+    - Format zapisa datuma rođenja i datuma učlanjenja mora biti isti. Po defaultu se uzima "godina-mjesec-dan"
+    no moguće je unutar kod import skripte primjeniti custom format.
+
 ### Pridruživanje člana sekciji
 Pridruživanje člana započinje njegovom pretragom po broju članske iskaznice.
 Ukoliko broj članske iskaznice nije poznat, javi se savjetniku sekcije iz koje se član pridružuje koji 
@@ -77,5 +110,6 @@ Link na dizanje novog Issua na repozitoriju je : https://github.com/mlaggi0/Volo
 
 ## TODO lista
 
+- [ ] Import članova/aktivnosti
 - [ ] Paginacija kod izlistavanja članova i aktivnosti
 - [ ] Optimizacija kontrolera baze podataka

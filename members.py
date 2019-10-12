@@ -56,7 +56,7 @@ def add_member():
         if not membership_start:
             error = 'Membership start date is required.'
         if not card_id:
-            error = 'Card id is required.'
+            card_id = db.generate_new_card_id()
         if not email:
             error = 'Email is required.'
         if not section or section == 'Izaberi sekciju':
