@@ -36,6 +36,7 @@ function remove(e, member_id)
 }
 </script>
 <h2 style="text-align:center">Popis članova koji više nisu aktivni</h2>
+{{ pagination.info }}
 <table class="table table-striped table-bordered table-hover">
         <thead>
         <tr>
@@ -71,5 +72,6 @@ function remove(e, member_id)
             </tr>
         {% endfor %}
     </table>
+{{ pagination.links }}
 </body>
 {% endblock content %}

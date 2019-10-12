@@ -2,10 +2,12 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 
+from flask_paginate import Pagination, get_page_parameter
+
 from DatabaseController import DatabaseController, get_date_object
 import DatabaseTables
 
-from constants import AccessLevels
+from constants import AccessLevels, ACTIVITIES_PER_PAGE, ACTIVITY_TYPES_PER_PAGE
 import Utilities
 
 from auth import login_required, savjetnik_required, admin_required
@@ -71,12 +73,25 @@ def add_activity():
 @login_required
 def list_activities():
     db = DatabaseController()
+    q = request.args.get('q')
+    search = False
+    if q:
+        search = True
+    page = request.args.get(get_page_parameter(), type=int, default=1)
     activities = db.get_full_activity_info()
-    activities_list = {}
-    for activity in sorted(activities, reverse=True, key=lambda x: x[3]):
-        activities_list[activity[0]] = activity[1:]
+    pagination = Pagination(page=page, per_page=ACTIVITIES_PER_PAGE, total=len(activities),
+                            search=search, record_name='members', css_framework='foundation')
 
-    return render_template("/activities/list.html", list_records=activities_list)
+    activities_list = {}
+    start_page = (page - 1) * ACTIVITIES_PER_PAGE
+    end_page = (page - 1) * ACTIVITIES_PER_PAGE + ACTIVITIES_PER_PAGE
+    for i, activity in enumerate(sorted(activities, reverse=True, key=lambda x: x[3])):
+        if start_page <= i < end_page:
+            activities_list[activity[0]] = activity[1:]
+        elif i >= end_page:
+            break
+
+    return render_template("/activities/list.html", list_records=activities_list, pagination=pagination)
 
 
 @activities_bp.route('/edit/<activity_id>', methods=['GET', 'POST'])
@@ -120,7 +135,7 @@ def edit_activity(activity_id):
         activity_types[row[0]] = row[1]
 
     return render_template('/activities/edit.html', activity_types=activity_types, activity=activity[1:],
-                           activity_id=activity[0], sections=Utilities.sections)
+                           activity_id=activity[0], sections=Utilities.sections_and_teams)
 
 
 @activities_bp.route('/remove/<activity_id>', methods=['POST'])
@@ -177,15 +192,31 @@ def add_activity_type():
 @login_required
 def list_activity_types():
     db = DatabaseController()
-    activities = db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI)
-    activities_list = {}
-    for activity in sorted(activities, key=lambda x: x[1]):
-        if session['access_level'] == AccessLevels.ADMIN:
-            activities_list[activity[0]] = activity[1:]
-        elif activity[-1] == session['section'] or activity[-1] == 'svi':
-            activities_list[activity[0]] = activity[1:-1]
 
-    return render_template("/activities/list_types.html", list_records=activities_list)
+    q = request.args.get('q')
+    search = False
+    if q:
+        search = True
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+
+    if session['access_level'] == AccessLevels.ADMIN:
+        activities = db.get_all_rows_from_table(DatabaseTables.TIP_AKTIVNOSTI)
+    else:
+        activities = db.get_all_section_activitiy_types()
+
+    pagination = Pagination(page=page, per_page=ACTIVITY_TYPES_PER_PAGE, total=len(activities),
+                            search=search, record_name='members', css_framework='foundation')
+
+    activities_list = {}
+    start_page = (page - 1) * ACTIVITY_TYPES_PER_PAGE
+    end_page = (page - 1) * ACTIVITY_TYPES_PER_PAGE + ACTIVITY_TYPES_PER_PAGE
+    for i, activity in enumerate(sorted(activities, key=lambda x: x[1])):
+        if start_page <= i < end_page:
+            activities_list[activity[0]] = activity[1:]
+        elif i >= end_page:
+            break
+
+    return render_template("/activities/list_types.html", list_records=activities_list, pagination=pagination)
 
 
 @activities_bp.route('/edit_type/<type_id>', methods=['GET', 'POST'])
@@ -221,7 +252,7 @@ def edit_activity_type(type_id):
         flash(error, 'danger')
 
     return render_template('/activities/edit_type.html', activity_type=activity_type[1:],
-                           activity_type_id=activity_type[0], sections=Utilities.sections)
+                           activity_type_id=activity_type[0], sections=Utilities.sections_and_teams)
 
 
 @activities_bp.route('/remove_type/<activity_type_id>', methods=['POST'])

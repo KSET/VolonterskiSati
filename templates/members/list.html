@@ -19,6 +19,7 @@
 </head>
 <body>
 
+{{ pagination.info }}
 <table class="table table-striped table-bordered table-hover">
         <thead>
         <tr>
@@ -50,6 +51,7 @@
             </tr>
         {% endfor %}
     </table>
+{{ pagination.links }}
 
 <script>
     jQuery(document).ready(function($) {

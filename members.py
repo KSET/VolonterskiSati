@@ -1,6 +1,9 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
+
+from flask_paginate import Pagination, get_page_parameter
+
 from werkzeug.security import generate_password_hash
 from werkzeug.exceptions import HTTPException
 
@@ -8,7 +11,7 @@ from auth import login_required, savjetnik_required, admin_required
 
 import Utilities
 
-from constants import Iskaznice, AccessLevels
+from constants import Iskaznice, AccessLevels, MEMBERS_PER_PAGE, ARCHIVED_MEMBERS_PER_PAGE
 
 import datetime
 
@@ -95,16 +98,29 @@ def add_member():
 @login_required
 def list_members():
     db = DatabaseController()
+    q = request.args.get('q')
+    search = False
+    if q:
+        search = True
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         members = [x[:-2] for x in db.get_all_members()]
     else:
         members = [x[:-1] for x in db.get_all_members_admin()]
 
+    pagination = Pagination(page=page, per_page=MEMBERS_PER_PAGE, total=len(members),
+                            search=search, record_name='members', css_framework='foundation')
+
+    start_page = (page - 1) * MEMBERS_PER_PAGE
+    end_page = (page - 1) * MEMBERS_PER_PAGE + MEMBERS_PER_PAGE
     members_list = {}
-    for member in members:
-        if db.is_member_active(member[0]):
+    for i, member in enumerate(members):
+        if start_page <= i < end_page:
             members_list[member[0]] = member[1:] + (db.get_member_primary_section(member[0]), ) \
                                       + (Utilities.card_colors[db.get_member_card_color(member[0])], )
+        elif i >= end_page:
+            break
 
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         sorted_list = sorted(members_list.items(), key=lambda x: x[1][1])  # Sort po prezimenu ako je unutar sekcije
@@ -115,7 +131,7 @@ def list_members():
     for k, v in sorted_list:
         sorted_members[k] = v
 
-    return render_template("/members/list.html", list_records=sorted_members)
+    return render_template("/members/list.html", list_records=sorted_members, pagination=pagination)
 
 
 @members_bp.route('/edit/<member_id>', methods=['GET', 'POST'])
@@ -251,13 +267,30 @@ def erase_member(member_id):
 @login_required
 def archive():
     db = DatabaseController()
-    all_archived_members = db.get_row(DatabaseTables.CLAN, 'aktivan', 0, return_all=True)
-    members_list = {}
-    for member in sorted(all_archived_members, key=lambda x: x[10]):
-        members_list[member[0]] = (member[1], member[2], member[3], member[7],
-                                   member[8], member[9], db.get_member_primary_section(member[0]), member[-1])
 
-    return render_template('/members/archive.html', members_list=members_list)
+    q = request.args.get('q')
+    search = False
+    if q:
+        search = True
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+
+    all_archived_members = db.get_row(DatabaseTables.CLAN, 'aktivan', 0, return_all=True)
+
+    pagination = Pagination(page=page, per_page=ARCHIVED_MEMBERS_PER_PAGE, total=len(all_archived_members),
+                            search=search, record_name='members', css_framework='foundation')
+
+    start_page = (page - 1) * ARCHIVED_MEMBERS_PER_PAGE
+    end_page = (page - 1) * ARCHIVED_MEMBERS_PER_PAGE + ARCHIVED_MEMBERS_PER_PAGE
+
+    members_list = {}
+    for i, member in enumerate(sorted(all_archived_members, key=lambda x: x[10])):
+        if start_page <= i < end_page:
+            members_list[member[0]] = (member[1], member[2], member[3], member[7],
+                                       member[8], member[9], db.get_member_primary_section(member[0]), member[-1])
+        elif i >= end_page:
+            break
+
+    return render_template('/members/archive.html', members_list=members_list, pagination=pagination)
 
 
 @members_bp.route('/<member_id>/activate', methods=['POST'])
