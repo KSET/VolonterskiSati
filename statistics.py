@@ -2,13 +2,15 @@ import datetime
 
 from dateutil.relativedelta import relativedelta
 from flask import (
-    Blueprint, flash, render_template, request, session, Response
+    Blueprint, flash, render_template, request, session, send_file
 )
 
 import DatabaseTables
 from constants import AccessLevels
 import Utilities
 from DatabaseController import DatabaseController, get_date_object
+
+import csv, io
 
 from auth import login_required, savjetnik_required, admin_required
 
@@ -364,7 +366,6 @@ def section_stats():
 @login_required
 @savjetnik_required
 def export():
-    # TODO DOVRŠITI
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     all_sections = False if request.args.get('all_sections') == 'false' else True
@@ -382,16 +383,22 @@ def export():
 
     activity_data = get_interval_member_activity(start_date, end_date, section)
 
-    new_file = "BROJ VOLONTERSKIH SATI OD %s DO %s\n" % (start_date, end_date)
-    for section in activity_data:
-        new_file += "\n#####################\n   %s SEKCIJA    \n#####################\n" % section.upper()
-        new_file += "\nIme Prezime (nadimak) -> Broj sati -> Broj sati težinski\n"
-        for entry in activity_data[section]:
-            name = activity_data[section][entry][0]
-            last_name = activity_data[section][entry][1]
-            nickname = activity_data[section][entry][2]
-            hours = activity_data[section][entry][3]
-            hours_w = activity_data[section][entry][4]
-            new_file += "%s %s (%s) ---> %s ---> %s\n" % (name, last_name, nickname, hours, hours_w)
+    with open('export.csv', 'w', newline='') as csvfile:
+        fieldnames = ['Ime', 'Prezime', 'Nadimak', 'Sati', 'Težinski sati']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for section in activity_data:
+            writer.writerow({'Ime': section.upper(), 'Prezime': 'Sekcija'})
+            for entry in activity_data[section]:
+                name = activity_data[section][entry][0]
+                last_name = activity_data[section][entry][1]
+                nickname = activity_data[section][entry][2]
+                hours = activity_data[section][entry][3]
+                hours_w = activity_data[section][entry][4]
+                writer.writerow({'Ime': name, 'Prezime': last_name, 'Nadimak': nickname,
+                                 'Sati': hours, 'Težinski sati': hours_w})
 
-    return Response(new_file, mimetype="text", headers={"Content-disposition": "attachment; filename=export.txt"})
+    return send_file('export.csv',
+                     mimetype='text/csv',
+                     attachment_filename='export.csv',
+                     as_attachment=True)

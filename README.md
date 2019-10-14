@@ -99,8 +99,12 @@ Uz to u modulu constants je potrebno stvoriti Konstantu koja će reprezentirati 
 ### Treba exportati podatke o volontiranju članova
 Svaki savjetnik može eksportati volonterske sate u željenom intervalu za svoju sekciju odlaskom na 
 intervalnu statistiku, odabirom intervala te pritiskom na gumb export. 
-Sam export se zapisuje u TXT datoteku koju se može preuzeti na vlastiti komp.
-Radi lijepšeg pregleda preporuča se otvoriti datoteku sa naprednijim txt editorom (npr. Notepad++)
+Sam export se zapisuje u CSV datoteku koju se može preuzeti na vlastiti komp.
+
+TIP: Ako podaci unutar CSV datoteke budu u jednom stupcu, unutar excela je moguće pravilno ih 
+rasporediti po zadanom delimiteru (",") tako da se izabere stupac sa podacima, odabere opcija Data -> text to columns
+te prate upute za razbijanje teksta u stupce. Kod delimitera je potrebno odabrati znak koji odvaja zasebne stupce
+(po defaultu je to zarez).
 
 Administrator može napraviti eksport svih sekcija odjednom.
 
