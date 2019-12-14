@@ -88,6 +88,32 @@ function goBack() {
         <input type="email" class="form-control" id="email" value="{{ member[8] }}" name="email" required>
       </div>
     </div>
+  <div class="form-group">
+      <label class="control-label col-sm-2" for="faculty">Fakultet:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="faculty" value="{{ member[9] }}" name="faculty" required>
+      </div>
+    </div>
+  <div class="form-group">
+      <label class="control-label col-sm-2" for="address">Adresa:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="address" value="{{ member[10] }}" name="address" required>
+      </div>
+    </div>
+  <div class="form-group">
+      <label class="control-label col-sm-2" for="shirt">Veličina majice:</label>
+      <div class="col-sm-10">
+          <select class="form-control" id="shirt" name="shirt" required>
+              {% for size in shirt_sizes %}
+                  {% if size == member[11] %}
+                      <option value={{ size }} selected>{{ shirt_sizes[size] }}</option>
+                  {% else %}
+                      <option value={{ size }} >{{ shirt_sizes[size] }}</option>
+                  {% endif %}
+              {% endfor %}
+          </select>
+      </div>
+    </div>
       {% if session['access_level'] == 0 %}
     <div class="form-group">
       <label class="control-label col-sm-2" for="section">Sekcija:</label>

@@ -1,6 +1,7 @@
 CREATE_USER_TABLE = "CREATE TABLE IF NOT EXISTS CLAN (id integer primary key, ime text, prezime text, nadimak text," \
                     " oib text default '-', mobitel text default '-', datum_rodenja date default '-'," \
-                    " datum_uclanjenja date default '-', broj_iskaznice text default '-', email text default '-'," \
+                    " datum_uclanjenja date default '-', broj_iskaznice text default '-', email text default '-', " \
+                    "fakultet text default '-', adresa text default '-', velicina_majice text default '-', " \
                     " aktivan int default 1, datum_deaktivacije date default '-');"
 
 CREATE_ACTIVITY_TABLE = "CREATE TABLE IF NOT EXISTS AKTIVNOST (id integer primary key, naziv text," \

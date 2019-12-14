@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-</head>
-<body>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    </head>
+    <body>
 
-<table class="table table-striped table-bordered table-hover">
+    <table class="table table-striped table-bordered table-hover">
         <thead>
         <tr>
             <th>Korisničko ime</th>
@@ -17,23 +17,27 @@
         </tr>
         </thead>
         {% for k, v in accounts_list.items() %}
-            <tr class='clickable-row' data-href="{{ url_for('accounts.edit_account', account_id = k )}}">
-                {% for value in v %}
-                    <td>
-                        {{ value }}
-                    </td>
-                {% endfor %}
+            {% if session['access_level'] == 0 %}
+                <tr class='clickable-row' data-href="{{ url_for('accounts.edit_account', account_id = k ) }}">
+                    {% else %}
+                <tr>
+            {% endif %}
+        {% for value in v %}
+            <td>
+                {{ value }}
+            </td>
+        {% endfor %}
 
-            </tr>
+        </tr>
         {% endfor %}
     </table>
 
-<script>
-    jQuery(document).ready(function($) {
-    $(".clickable-row").click(function() {
-        window.location = $(this).data("href");
-    });
-});
-</script>
-</body>
+    <script>
+        jQuery(document).ready(function ($) {
+            $(".clickable-row").click(function () {
+                window.location = $(this).data("href");
+            });
+        });
+    </script>
+    </body>
 {% endblock content %}

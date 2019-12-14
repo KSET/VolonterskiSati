@@ -32,6 +32,12 @@
       </div>
     </div>
     <div class="form-group">
+      <label class="control-label col-sm-2" for="faculty">Fakultet:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="faculty" placeholder="Upiši faks" name="faculty">
+      </div>
+    </div>
+    <div class="form-group">
       <label class="control-label col-sm-2" for="oib">OIB:</label>
       <div class="col-sm-10">
         <input type="text" class="form-control" id="oib" placeholder="Upiši oib" name="oib" required>
@@ -41,6 +47,12 @@
       <label class="control-label col-sm-2" for="phone">Broj mobitela:</label>
       <div class="col-sm-10">
         <input type="text" class="form-control" id="phone" placeholder="Upiši broj mobitela" name="phone" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="address">Adresa:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="address" placeholder="Upiši adresu" name="address">
       </div>
     </div>
       <div class="form-group">
@@ -65,6 +77,17 @@
       <label class="control-label col-sm-2" for="email">Email:</label>
       <div class="col-sm-10">
         <input type="email" class="form-control" id="email" placeholder="Upiši email" name="email" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="shirt">Veličina majice:</label>
+      <div class="col-sm-10">
+          <select class="form-control" id="shirt" name="shirt" required>
+              <option value="" selected disabled hidden>Izaberi veličinu majice</option>
+              {% for size in shirt_sizes %}
+                  <option value={{ size }} >{{ shirt_sizes[size] }}</option>
+              {% endfor %}
+          </select>
       </div>
     </div>
       <div class="form-group">

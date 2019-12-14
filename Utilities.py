@@ -14,6 +14,19 @@ sections = {
     'video': Sekcije.VIDEO
 }
 
+shirt_sizes = {
+    'mxxl': ShirtSizes.MXXL,
+    'mxl': ShirtSizes.MXL,
+    'ml': ShirtSizes.ML,
+    'mm': ShirtSizes.MM,
+    'ms': ShirtSizes.MS,
+    'zxl': ShirtSizes.ZXL,
+    'zl': ShirtSizes.ZL,
+    'zm': ShirtSizes.ZM,
+    'zs': ShirtSizes.ZS,
+    'zxs': ShirtSizes.ZXS
+}
+
 teams = {
     'pr': Timovi.PR,
     'dizajn': Timovi.DIZAJN

@@ -44,7 +44,9 @@ class DatabaseController:
     entry_values = tuple containing argument values corresponding to those defined before keyword values.
     """
     def add_member_entry(self, entry_values):
-        self.cursor.execute("INSERT INTO CLAN(ime, prezime, nadimak, oib, mobitel, datum_rodenja, datum_uclanjenja, broj_iskaznice, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);" , entry_values)
+        self.cursor.execute("INSERT INTO CLAN(ime, prezime, nadimak, oib, mobitel, datum_rodenja, datum_uclanjenja, "
+                            "broj_iskaznice, email, fakultet, adresa, velicina_majice) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", entry_values)
         self._save_changes()
 
     def add_member_entry_full(self, entry_values):
@@ -52,7 +54,9 @@ class DatabaseController:
         self._save_changes()
 
     def edit_member(self, member_id, new_values):
-        self.cursor.execute("UPDATE CLAN SET ime = ?, prezime = ?, nadimak = ?, oib = ?, mobitel = ?, datum_rodenja = ?, datum_uclanjenja = ?, broj_iskaznice = ?, email = ? WHERE id = ?", new_values + (member_id, ))
+        self.cursor.execute("UPDATE CLAN SET ime = ?, prezime = ?, nadimak = ?, oib = ?, mobitel = ?, "
+                            "datum_rodenja = ?, datum_uclanjenja = ?, broj_iskaznice = ?, email = ?, "
+                            "fakultet = ?, adresa = ?, velicina_majice = ? WHERE id = ?", new_values + (member_id, ))
         self._save_changes()
 
     def deactivate_member(self, member_id):
@@ -277,9 +281,9 @@ class DatabaseController:
 
     def get_all_members(self):
         query = 'SELECT id, ime, prezime, nadimak, oib, mobitel, datum_rodenja, CLAN.datum_uclanjenja,' \
-                'broj_iskaznice, email, sekcija, aktivan FROM CLAN inner join CLAN_SEKCIJE on ' \
-                'CLAN.id = CLAN_SEKCIJE.id_clan WHERE sekcija = "%s" and aktivan = 1' \
-                % session["section"]
+                'broj_iskaznice, email, fakultet, adresa, velicina_majice, sekcija, aktivan ' \
+                'FROM CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan ' \
+                'WHERE sekcija = "%s" and aktivan = 1' % session["section"]
         self.cursor.execute(query)
         return self.cursor.fetchall()
 

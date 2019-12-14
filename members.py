@@ -36,6 +36,10 @@ def add_member():
         membership_start = request.form['membership']
         card_id = request.form['idcard']
         email = request.form['email']
+        shirt_size = request.form['shirt']
+        faculty = request.form['faculty']
+        address = request.form['address']
+
         try:
             section = request.form['section']
         except HTTPException:
@@ -77,7 +81,7 @@ def add_member():
             date_of_birth = get_date_object(date_of_birth)
             membership_start = get_date_object(membership_start)
             entry_values = (name, last_name, nickname, oib, phone_number, date_of_birth, membership_start,
-                            card_id, email)
+                            card_id, email, faculty, address, shirt_size)
             db.add_member_entry(entry_values)
 
             db.add_member_card((db.get_member_id(name, last_name, nickname), Iskaznice.PLAVA, membership_start))
@@ -91,7 +95,7 @@ def add_member():
 
         flash(error, 'danger')
 
-    return render_template('/members/add.html')
+    return render_template('/members/add.html', shirt_sizes=Utilities.shirt_sizes)
 
 
 @members_bp.route('/list', methods=['GET'])
@@ -117,7 +121,9 @@ def list_members():
     members_list = {}
     for i, member in enumerate(members):
         if start_page <= i < end_page:
-            members_list[member[0]] = member[1:] + (db.get_member_primary_section(member[0]), ) \
+            members_list[member[Utilities.UserDBIndex.ID]] = member[1:-1] + \
+                                      (Utilities.shirt_sizes[member[Utilities.UserDBIndex.VELICINA_MAJICE]], ) \
+                                      + (Utilities.sections[db.get_member_primary_section(member[0])], ) \
                                       + (Utilities.card_colors[db.get_member_card_color(member[0])], )
         elif i >= end_page:
             break
@@ -152,6 +158,9 @@ def edit_member(member_id):
         membership_start = request.form['membership']
         card_id = request.form['idcard']
         email = request.form['email']
+        shirt_size = request.form['shirt']
+        faculty = request.form['faculty']
+        address = request.form['address']
 
         section_change = False
         card_color_change = False
@@ -201,7 +210,7 @@ def edit_member(member_id):
             date_of_birth = get_date_object(date_of_birth)
             membership_start = get_date_object(membership_start)
             entry_values = (name, last_name, nickname, oib, phone_number, date_of_birth, membership_start,
-                            card_id, email)
+                            card_id, email, faculty, address, shirt_size)
             db.edit_member(member_id, entry_values)
 
             if section_change:
@@ -224,7 +233,7 @@ def edit_member(member_id):
 
     return render_template('/members/edit.html', member=member[1:-2], member_section=member_section,
                            member_id=member[0], sections=Utilities.sections, member_card=member_card,
-                           cards=Utilities.card_colors)
+                           cards=Utilities.card_colors, shirt_sizes=Utilities.shirt_sizes)
 
 
 @members_bp.route('/remove/<member_id>', methods=['POST'])
@@ -319,7 +328,7 @@ def associate():
             if db.member_exists(card_id):
                 member_id = db.get_member_by_card_id(card_id)[0]
                 member = db.get_table_row(DatabaseTables.CLAN, member_id)
-                if member_already_joined(member_id, session['section']):
+                if member_already_joined(member_id, session['section']) and session['access_level'] != AccessLevels.ADMIN:
                     flash("Član %s %s je već učlanjen u %s sekciju" % (member[1], member[2], session['section']), "info")
                 else:
                     member = db.get_table_row(DatabaseTables.CLAN, member_id)

@@ -29,7 +29,7 @@ DatabaseController().init_tables()
 def index():
     db = DatabaseController()
     start_date = datetime.datetime.today().replace(day=1).date()
-    end_date = datetime.datetime.today().replace(month=datetime.datetime.today().month + 1, day=1).date()
+    end_date = datetime.datetime.today().replace(month=datetime.datetime.today().month % 12 + 1, day=1).date()
     members_activity = db.get_period_activity(start_date, end_date)
     total_activity = {}
     member_names = {}

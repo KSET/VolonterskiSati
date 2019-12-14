@@ -1,4 +1,6 @@
+import csv
 import datetime
+import os
 
 from dateutil.relativedelta import relativedelta
 from flask import (
@@ -6,14 +8,10 @@ from flask import (
 )
 
 import DatabaseTables
-from constants import AccessLevels
 import Utilities
 from DatabaseController import DatabaseController, get_date_object
-
-import csv, io
-
 from auth import login_required, savjetnik_required, admin_required
-
+from constants import AccessLevels
 
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/statistics')
 
@@ -381,9 +379,13 @@ def export():
     start_date = datetime.date(start_year, start_month, start_day)
     end_date = datetime.date(end_year, end_month, end_day)
 
+    file_name = "export_from_%s-%s-%s_to_%s-%s-%s" % (start_day, start_month, start_year, end_day, end_month, end_year)
+
     activity_data = get_interval_member_activity(start_date, end_date, section)
 
-    with open('export.csv', 'w', newline='') as csvfile:
+    file_path = os.path.join(Utilities.EXPORT_FILE_FOLDER, file_name)
+
+    with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['Ime', 'Prezime', 'Nadimak', 'Sati', 'Težinski sati']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -398,7 +400,7 @@ def export():
                 writer.writerow({'Ime': name, 'Prezime': last_name, 'Nadimak': nickname,
                                  'Sati': hours, 'Težinski sati': hours_w})
 
-    return send_file('export.csv',
+    return send_file(file_path,
                      mimetype='text/csv',
-                     attachment_filename='export.csv',
+                     attachment_filename=file_name,
                      as_attachment=True)

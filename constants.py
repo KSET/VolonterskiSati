@@ -10,7 +10,6 @@ class Sekcije:
     VIDEO = 'Video'
     SVI = 'Svi'
 
-
 class Timovi:
     PR = 'Pr'
     DIZAJN = 'Dizajn'
@@ -21,6 +20,60 @@ class Iskaznice:
     NARANCASTA = 1
     PLAVA = 2
 
+
+class UserDBIndex:
+    ID = 0
+    IME = 1
+    PREZIME = 2
+    NADIMAK = 3
+    OIB = 4
+    MOBITEL = 5
+    DATUM_RODENJA = 6
+    DATUM_UCLANJENJA = 7
+    BROJ_ISKAZNICE = 8
+    EMAIL = 9
+    FAKS = 10
+    ADRESA = 11
+    VELICINA_MAJICE = 12
+    AKTIVAN = 13
+    DATUM_DEAKTIVACIJE = 14
+
+
+class ActivityDBIndex:
+    ID = 0
+    NAZIV = 1
+    OPIS = 2
+    DATUM = 3
+    SEKCIJA = 4
+    VRSTA_AKTIVNOSTI = 5
+
+
+class ActivityTypeDBIndex:
+    ID = 0
+    NAZIV = 1
+    OPIS = 2
+    SEKCIJA = 3
+
+
+class AccountsDBIndex:
+    ID = 0
+    USERNAME = 1
+    PASSWORD = 2
+    ACCESS_LEVEL = 3
+    SEKCIJA = 4
+
+
+class ShirtSizes:
+    MXXL = 'Muški XXL'
+    MXL = 'Muški XL'
+    ML = 'Muški L'
+    MM = 'Muški M'
+    MS = 'Muški S'
+    ZXL = 'Ženski XL'
+    ZL = 'Ženski L'
+    ZM = 'Ženski M'
+    ZS = 'Ženski S'
+    ZXS = 'Ženski XS'
 
 class AccessLevels:
     ADMIN = 0
@@ -58,3 +111,5 @@ MEMBERS_PER_PAGE = 30
 ACTIVITIES_PER_PAGE = 30
 ACTIVITY_TYPES_PER_PAGE = 30
 ARCHIVED_MEMBERS_PER_PAGE = 30
+
+EXPORT_FILE_FOLDER = "/tmp/"
