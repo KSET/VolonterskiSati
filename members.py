@@ -111,7 +111,7 @@ def list_members():
     if session["access_level"] >= AccessLevels.SAVJETNIK:
         members = [x[:-2] for x in db.get_all_members()]
     else:
-        members = [x[:-1] for x in db.get_all_members_admin()]
+        members = [x[:-2] for x in db.get_all_members_admin()]
 
     pagination = Pagination(page=page, per_page=MEMBERS_PER_PAGE, total=len(members),
                             search=search, record_name='members', css_framework='foundation')
@@ -294,8 +294,13 @@ def archive():
     members_list = {}
     for i, member in enumerate(sorted(all_archived_members, key=lambda x: x[10])):
         if start_page <= i < end_page:
-            members_list[member[0]] = (member[1], member[2], member[3], member[7],
-                                       member[8], member[9], db.get_member_primary_section(member[0]), member[-1])
+            members_list[member[0]] = (member[Utilities.UserDBIndex.IME], member[Utilities.UserDBIndex.PREZIME],
+                                       member[Utilities.UserDBIndex.NADIMAK],
+                                       member[Utilities.UserDBIndex.DATUM_UCLANJENJA],
+                                       member[Utilities.UserDBIndex.BROJ_ISKAZNICE],
+                                       member[Utilities.UserDBIndex.EMAIL],
+                                       db.get_member_primary_section(member[0]),
+                                       member[Utilities.UserDBIndex.DATUM_DEAKTIVACIJE])
         elif i >= end_page:
             break
 

@@ -36,6 +36,10 @@ class DatabaseController:
     def _save_changes(self):
         self.conn.commit()
 
+    def __execute_db_and_fetch(self, query):
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
     def get_table_attribute_names(self, table_name):
         query = "PRAGMA table_info(%s)" % table_name
         self.cursor.execute(query)
@@ -272,7 +276,11 @@ class DatabaseController:
         return self.cursor.fetchall()
 
     def get_all_members_admin(self):
-        return [x[:-1] for x in self.get_row(DatabaseTables.CLAN, "aktivan", 1, return_all=True)]
+        query = 'SELECT id, ime, prezime, nadimak, oib, mobitel, datum_rodenja, CLAN.datum_uclanjenja,' \
+                'broj_iskaznice, email, fakultet, adresa, velicina_majice, sekcija, aktivan ' \
+                'FROM CLAN inner join CLAN_SEKCIJE on CLAN.id = CLAN_SEKCIJE.id_clan WHERE aktivan = 1 ' \
+                'AND maticna_sekcija = 1'
+        return self.__execute_db_and_fetch(query)
 
     def get_all_rows_from_table(self, table_name):
         query = "SELECT * FROM %s" % table_name
