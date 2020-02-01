@@ -395,6 +395,9 @@ class DatabaseController:
                     elif card_id > last_id:
                         last_id = card_id
 
+        if last_id is None:
+            last_id = "aa-%s" % this_year
+
         letters, numbers = last_id.split("-")
         if letters[1] == 'z':
             letters = "%sa" % chr(ord(letters[0]) + 1)

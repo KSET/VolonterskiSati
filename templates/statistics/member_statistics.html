@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
   <style>
   .modal-header, h4, .close {
     background-color: #f49b13;
@@ -51,6 +52,42 @@
     {% endfor %}
   </tbody>
 </table>
+
+</form>
+
+<div id="graph"></div>
+
+<script>
+window.onload = function () {
+    var graphData = [];
+    {% for k, v in activity_types.items() %}
+        graphData.push({y: {{ hours[k] }}, label: "{{ v }}"});
+    {% endfor %}
+
+    var chart = new CanvasJS.Chart("graph", {
+        animationEnabled: true,
+
+        title:{
+            text:"Broj volonterskih sati po tipu aktivnosti od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine"
+        },
+        axisX:{
+            interval: 1
+        },
+        axisY2:{
+            interlacedColor: "rgba(1,77,101,.2)",
+            gridColor: "rgba(1,77,101,.1)",
+            title: "Broj sati"
+        },
+        data: [{
+            type: "column",
+            name: "volonterski sati",
+            axisYType: "secondary",
+            dataPoints: graphData
+        }]
+    });
+    chart.render();
+}
+</script>
 
 </body>
 {% endblock content %}

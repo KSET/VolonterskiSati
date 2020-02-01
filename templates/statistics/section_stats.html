@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </head>
 <body>
 <h2 style="text-align:center">Statistika sekcijskih dežurstava od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine</h2>
@@ -36,7 +37,37 @@
         {% endfor %}
     </table>
 
+<div id="graph"></div>
+
 <script>
+window.onload = function () {
+    var graphData = [];
+    {% for section_name in sections %}
+        var sectionName;
+        {% if section_name == 'svi' %}
+            sectionName = "Mješano dežurstvo";
+        {% else %}
+            sectionName = "{{sections[section_name]}}";
+        {% endif %}
+        graphData.push({y: {{ section_count[section_name] }}, label: sectionName});
+    {% endfor %}
+
+    var chart = new CanvasJS.Chart("graph", {
+        animationEnabled: true,
+
+        title:{
+            text:"Sekcijska dežurstva od {{days[0]}}.{{months[0]}}.{{years[0]}}. godine do {{days[1]}}.{{months[1]}}.{{years[1]}}. godine"
+        },
+        data: [{
+            type: "pie",
+            startAngle: 240,
+		    indexLabel: "{label} {y}",
+            dataPoints: graphData
+        }]
+    });
+    chart.render();
+};
+
     jQuery(document).ready(function($) {
     $(".clickable-row").click(function() {
         window.location = $(this).data("href");
